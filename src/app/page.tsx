@@ -1,4 +1,5 @@
 import Hero from '@/components/Hero';
+import RegistrationWizard from '@/components/RegistrationWizard';
 
 export default function Home() {
   return (
@@ -20,31 +21,7 @@ export default function Home() {
           </div>
           <div className="bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-sm">
             <h3 className="text-xl font-semibold mb-6">Quick Registration</h3>
-            
-            <form className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-400 mb-1">Full Name</label>
-                <input 
-                  type="text" 
-                  className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/30 transition-colors"
-                  placeholder="John Doe"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-400 mb-1">Email Address</label>
-                <input 
-                  type="email" 
-                  className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/30 transition-colors"
-                  placeholder="john@example.com"
-                />
-              </div>
-              <button 
-                type="button"
-                className="w-full bg-white text-black font-medium py-3 rounded-lg hover:bg-slate-200 transition-colors mt-2"
-              >
-                Continue to Ticket Selection
-              </button>
-            </form>
+            <RegistrationWizard />
           </div>
         </div>
       </section>

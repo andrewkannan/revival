@@ -121,6 +121,13 @@ export default function Hero() {
     // keep the mouse in sync with rendering
     render.mouse = mouse;
 
+    // Prevent Matter.js from hijacking page scroll
+    mouse.element.removeEventListener("mousewheel", mouse.mousewheel);
+    mouse.element.removeEventListener("DOMMouseScroll", mouse.mousewheel);
+    mouse.element.removeEventListener('touchmove', mouse.mousemove);
+    mouse.element.removeEventListener('touchstart', mouse.mousedown);
+    mouse.element.removeEventListener('touchend', mouse.mouseup);
+
     // Handle resize
     const handleResize = () => {
       if (!sceneRef.current) return;
@@ -161,7 +168,7 @@ export default function Hero() {
       {/* Matter.js Canvas Container */}
       <div 
         ref={sceneRef} 
-        className="absolute inset-0 z-10 cursor-grab active:cursor-grabbing"
+        className="absolute inset-0 z-10"
       />
       
       {/* Hero Content Overlay */}
