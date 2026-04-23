@@ -1,0 +1,88 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ------------------------------------------------------
+// Enums
+// ------------------------------------------------------
+
+enum OutreachLocation {
+  JOHOR_BAHRU
+  ISKANDAR_PUTERI
+  TAMAN_DAYA
+  PELANGI_INDAH
+  MELAKA
+  SIMPANG_RENGGAM
+  OTHERS
+}
+
+enum RegistrationStatus {
+  PENDING_FOR_PAYMENT // waiting for payment
+  PENDING_FOR_REVIEW  // admin will review
+  SEAT_SECURED        // once payment done
+  CONTACT_ADMIN       // issue with registration
+}
+
+enum TicketType {
+  ADULT
+  KIDS
+}
+
+// ------------------------------------------------------
+// Models
+// ------------------------------------------------------
+
+model Attendee {
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  phone         String
+  outreach      OutreachLocation
+  registrations Registration[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Registration {
+  id            String             @id @default(uuid())
+  attendee      Attendee           @relation(fields: [attendeeId], references: [id])
+  attendeeId    String
+  adultTickets  Int                @default(0)
+  kidsTickets   Int                @default(0)
+  totalAmount   Decimal            @db.Decimal(10, 2)
+  status        RegistrationStatus @default(PENDING_FOR_PAYMENT)
+  receiptUrl    String?            // URL for uploaded bank receipt
+  payLater      Boolean            @default(false)
+  tickets       Ticket[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+model Ticket {
+  id             String       @id @default(uuid())
+  registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  registrationId String
+  ticketType     TicketType
+  qrCodeUrl      String?      // Unique QR code image URL or encoded string
+  scanned        Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+// Single-row table to handle admin capacity updates & dynamic prices
+model AdminConfig {
+  id                   Int      @id @default(1) 
+  totalCapacity        Int      @default(400)
+  isEarlyBird          Boolean  @default(true)
+  adultPriceEarlyBird  Decimal  @db.Decimal(10, 2)
+  kidsPriceEarlyBird   Decimal  @db.Decimal(10, 2)
+  adultPriceRegular    Decimal  @db.Decimal(10, 2)
+  kidsPriceRegular     Decimal  @db.Decimal(10, 2)
+  updatedAt            DateTime @updatedAt
+}
