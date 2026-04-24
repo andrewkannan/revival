@@ -1,5 +1,7 @@
 import { getDashboardStats } from '@/actions/admin';
 import { getActiveLocksCount } from '@/lib/ticket-lock';
+
+export const dynamic = 'force-dynamic';
 import { Users, Ticket, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default async function AdminDashboard() {

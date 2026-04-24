@@ -1,5 +1,7 @@
 import prisma from '@/lib/prisma';
 import { updateRegistrationStatus } from '@/actions/admin';
+
+export const dynamic = 'force-dynamic';
 import { RegistrationStatus } from '@prisma/client';
 import { BadgeCheck, Clock, XCircle, AlertCircle } from 'lucide-react';
 
