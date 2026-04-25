@@ -1,9 +1,15 @@
 import Redis from 'ioredis';
 
-const globalForRedis = global as unknown as { redis: Redis };
+const globalForRedis = global as unknown as { redis: Redis | undefined };
+
+const redisUrl = process.env.REDIS_URL;
 
 export const redis =
   globalForRedis.redis ||
-  new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+  (redisUrl
+    ? new Redis(redisUrl)
+    : process.env.NODE_ENV === 'production'
+    ? (null as unknown as Redis) // Do not fallback to localhost in production to avoid hanging Server Components
+    : new Redis({ host: 'localhost', port: 6379 }));
 
-if (process.env.NODE_ENV !== 'production') globalForRedis.redis = redis;
+if (process.env.NODE_ENV !== 'production' && redis) globalForRedis.redis = redis;

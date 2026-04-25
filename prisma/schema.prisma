@@ -84,5 +84,6 @@ model AdminConfig {
   kidsPriceEarlyBird   Decimal  @db.Decimal(10, 2)
   adultPriceRegular    Decimal  @db.Decimal(10, 2)
   kidsPriceRegular     Decimal  @db.Decimal(10, 2)
+  earlyBirdEndDate     DateTime?
   updatedAt            DateTime @updatedAt
 }

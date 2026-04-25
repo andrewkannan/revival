@@ -62,13 +62,22 @@ export async function lockTicketsAction(sessionId: string, adult: number, kids: 
 export async function getPricing() {
   const adminConfig = await prisma.adminConfig.findUnique({ where: { id: 1 } });
   
-  // default fallback prices
+  // Check if early bird is active and not expired
+  let isEarlyBird = adminConfig?.isEarlyBird ?? true;
+  
+  if (isEarlyBird && adminConfig?.earlyBirdEndDate) {
+    const now = new Date();
+    if (now > adminConfig.earlyBirdEndDate) {
+      isEarlyBird = false; // Expired!
+    }
+  }
+  
   return {
-    isEarlyBird: adminConfig?.isEarlyBird ?? true,
-    adultPrice: adminConfig?.isEarlyBird 
+    isEarlyBird,
+    adultPrice: isEarlyBird 
       ? Number(adminConfig?.adultPriceEarlyBird || 50) 
       : Number(adminConfig?.adultPriceRegular || 70),
-    kidsPrice: adminConfig?.isEarlyBird 
+    kidsPrice: isEarlyBird 
       ? Number(adminConfig?.kidsPriceEarlyBird || 25) 
       : Number(adminConfig?.kidsPriceRegular || 35),
   };

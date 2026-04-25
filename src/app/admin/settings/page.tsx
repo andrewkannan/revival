@@ -12,6 +12,7 @@ export default function SettingsPage() {
   const [formData, setFormData] = useState({
     totalCapacity: 400,
     isEarlyBird: true,
+    earlyBirdEndDate: '',
     adultPriceEarlyBird: 50,
     kidsPriceEarlyBird: 25,
     adultPriceRegular: 80,
@@ -23,6 +24,7 @@ export default function SettingsPage() {
       setFormData({
         totalCapacity: config.totalCapacity,
         isEarlyBird: config.isEarlyBird,
+        earlyBirdEndDate: config.earlyBirdEndDate ? new Date(config.earlyBirdEndDate).toISOString().split('T')[0] : '',
         adultPriceEarlyBird: Number(config.adultPriceEarlyBird),
         kidsPriceEarlyBird: Number(config.kidsPriceEarlyBird),
         adultPriceRegular: Number(config.adultPriceRegular),
@@ -36,7 +38,7 @@ export default function SettingsPage() {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : Number(value)
+      [name]: type === 'checkbox' ? checked : (type === 'date' ? value : Number(value))
     }));
   };
 
@@ -45,7 +47,12 @@ export default function SettingsPage() {
     setSaving(true);
     setMessage({ text: '', type: '' });
 
-    const result = await updateAdminConfig(formData);
+    const payload = {
+      ...formData,
+      earlyBirdEndDate: formData.earlyBirdEndDate ? new Date(formData.earlyBirdEndDate) : null,
+    };
+
+    const result = await updateAdminConfig(payload);
     
     if (result.success) {
       setMessage({ text: 'Configuration saved successfully.', type: 'success' });
@@ -116,6 +123,20 @@ export default function SettingsPage() {
               </label>
             </div>
             <p className="text-xs text-slate-500 pl-8">If enabled, users will be charged the Early Bird rates below.</p>
+
+            {formData.isEarlyBird && (
+              <div className="pl-8 pt-2">
+                <label className="block text-sm font-medium text-slate-300 mb-2">Early Bird Expiration Date (Optional)</label>
+                <input
+                  type="date"
+                  name="earlyBirdEndDate"
+                  value={formData.earlyBirdEndDate}
+                  onChange={handleChange}
+                  className="w-full max-w-xs bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30"
+                />
+                <p className="text-xs text-slate-500 mt-2">After this date, pricing will automatically revert to Regular rates.</p>
+              </div>
+            )}
           </div>
         </div>
 

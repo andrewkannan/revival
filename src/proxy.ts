@@ -7,11 +7,15 @@ export default function proxy(request: NextRequest) {
   // Only protect the /admin routes
   if (request.nextUrl.pathname.startsWith('/admin')) {
     // Exclude the login page itself to prevent redirect loops
+    const sessionCookie = request.cookies.get(ADMIN_COOKIE_NAME);
+
+    // If on login page, redirect to dashboard if ALREADY authenticated
     if (request.nextUrl.pathname === '/admin/login') {
+      if (sessionCookie && sessionCookie.value === 'authenticated') {
+        return NextResponse.redirect(new URL('/admin', request.url));
+      }
       return NextResponse.next();
     }
-
-    const sessionCookie = request.cookies.get(ADMIN_COOKIE_NAME);
 
     if (!sessionCookie || sessionCookie.value !== 'authenticated') {
       // Redirect to login if unauthenticated
