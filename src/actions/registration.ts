@@ -163,17 +163,10 @@ export async function finalizeRegistration(data: RegistrationData, sessionId: st
 
 export async function uploadReceipt(registrationId: string, formData: FormData) {
   try {
-    const file = formData.get('receipt') as File | null;
-    if (!file) {
+    const base64String = formData.get('receiptBase64') as string | null;
+    if (!base64String) {
       return { success: false, message: 'No receipt uploaded.' };
     }
-
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    
-    // Create Data URL
-    const mimeType = file.type || 'application/octet-stream';
-    const base64String = `data:${mimeType};base64,${buffer.toString('base64')}`;
 
     await prisma.registration.update({
       where: { id: registrationId },
