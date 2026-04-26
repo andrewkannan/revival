@@ -178,7 +178,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <div className="relative w-full h-[90vh] min-h-[700px] overflow-hidden bg-poster-bg text-white">
+    <div className="relative w-full h-[90vh] min-h-[700px] overflow-hidden bg-transparent text-white">
       {/* Background Poster Aesthetic - Massive Vertical Text */}
       <div className="absolute inset-0 overflow-hidden flex items-center justify-center opacity-20 pointer-events-none select-none">
         <div className="text-[25vw] font-black text-poster-accent leading-none tracking-tighter mix-blend-screen -rotate-6 md:rotate-0 flex whitespace-nowrap opacity-30">
@@ -267,7 +267,10 @@ export default function Hero() {
                   transition={{ duration: 0.8, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
                   className="pointer-events-auto pt-6"
                 >
-                  <button className="bg-poster-accent hover:bg-poster-accent-bright text-poster-bg px-12 py-5 rounded-sm font-bold uppercase tracking-[0.15em] hover:-translate-y-1 transition-all duration-300 shadow-[0_0_30px_rgba(140,174,176,0.3)] hover:shadow-[0_0_40px_rgba(164,197,198,0.5)]">
+                  <button 
+                    onClick={() => document.getElementById('registration')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="bg-poster-accent hover:bg-poster-accent-bright text-poster-bg px-12 py-5 rounded-sm font-bold uppercase tracking-[0.15em] hover:-translate-y-1 transition-all duration-300 shadow-[0_0_30px_rgba(140,174,176,0.3)] hover:shadow-[0_0_40px_rgba(164,197,198,0.5)]"
+                  >
                     Register Now
                   </button>
                 </motion.div>

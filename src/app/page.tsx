@@ -3,10 +3,11 @@ import RegistrationWizard from '@/components/RegistrationWizard';
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-poster-bg">
+    <main className="min-h-screen bg-gradient-to-b from-[#263336] via-gray-400 to-black">
       <Hero />
       
-      <section className="py-24 px-6 md:px-12 max-w-7xl mx-auto text-white">
+      <section id="registration" className="py-24 px-6 md:px-12 max-w-7xl mx-auto text-white">
+
         <div className="grid md:grid-cols-2 gap-16">
           <div>
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-poster-accent-bright">Experience the Next Level</h2>
