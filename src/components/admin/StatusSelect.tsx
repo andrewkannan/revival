@@ -26,6 +26,7 @@ export default function StatusSelect({
     >
       <option value="PENDING_FOR_PAYMENT">Pending Payment</option>
       <option value="PENDING_FOR_REVIEW">Pending Review</option>
+      <option value="PAYMENT_REJECTED">Payment Rejected</option>
       <option value="SEAT_SECURED">Seat Secured</option>
       <option value="CONTACT_ADMIN">Contact Admin</option>
     </select>

@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import prisma from '@/lib/prisma';
 import { RegistrationStatus } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
+import { sendPaymentRejectedEmail } from '@/lib/email';
 
 const ADMIN_COOKIE_NAME = 'revival_admin_session';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 1 week
@@ -97,10 +98,15 @@ export async function updateAdminConfig(data: {
 
 export async function updateRegistrationStatus(id: string, status: RegistrationStatus) {
   try {
-    await prisma.registration.update({
+    const registration = await prisma.registration.update({
       where: { id },
-      data: { status }
+      data: { status },
+      include: { attendee: true }
     });
+    
+    if (status === 'PAYMENT_REJECTED') {
+      await sendPaymentRejectedEmail(registration.attendee.email, registration.attendee.name);
+    }
     
     revalidatePath('/admin/registrations');
     

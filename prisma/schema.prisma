@@ -25,6 +25,7 @@ enum OutreachLocation {
 enum RegistrationStatus {
   PENDING_FOR_PAYMENT // waiting for payment
   PENDING_FOR_REVIEW  // admin will review
+  PAYMENT_REJECTED    // payment proof invalid
   SEAT_SECURED        // once payment done
   CONTACT_ADMIN       // issue with registration
 }
