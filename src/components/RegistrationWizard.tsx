@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { checkCapacity, lockTicketsAction, finalizeRegistration, getPricing } from '@/actions/registration';
+import { checkCapacity, lockTicketsAction, finalizeRegistration, getPricing, uploadReceipt } from '@/actions/registration';
 
 const OutreachLocationEnum = z.enum([
   'JOHOR_BAHRU', 'ISKANDAR_PUTERI', 'TAMAN_DAYA', 
@@ -35,6 +35,7 @@ export default function RegistrationWizard() {
   const [isLocking, setIsLocking] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [registrationId, setRegistrationId] = useState<string | null>(null);
   const [pricing, setPricing] = useState({ adultPrice: 50, kidsPrice: 25, isEarlyBird: true });
   
   const { register, handleSubmit, formState: { errors }, watch, trigger, getValues } = useForm<FormData>({
@@ -92,10 +93,32 @@ export default function RegistrationWizard() {
     setError(null);
     try {
       const result = await finalizeRegistration(getValues(), sessionId);
-      if (result.success) {
-        setStep(4); // Success step
+      if (result.success && result.registrationId) {
+        setRegistrationId(result.registrationId);
+        setStep(4); // Payment Upload step
       } else {
         setError(result.message || 'Failed to complete registration.');
+      }
+    } catch (err) {
+      setError('A network error occurred.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const onUploadReceipt = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!registrationId) return;
+
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const res = await uploadReceipt(registrationId, formData);
+      if (res.success) {
+        setStep(5); // Success step
+      } else {
+        setError(res.message || 'Failed to upload receipt.');
       }
     } catch (err) {
       setError('A network error occurred.');
@@ -108,10 +131,10 @@ export default function RegistrationWizard() {
     <div className="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-sm relative overflow-hidden min-h-[450px]">
       
       {/* Step Indicator */}
-      {step < 4 && (
+      {step < 5 && (
         <div className="flex space-x-2 mb-8">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className={`h-1.5 flex-1 rounded-full ${step >= i ? 'bg-white' : 'bg-white/20'}`} />
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className={`h-1.5 flex-1 rounded-full ${step >= i ? 'bg-poster-accent' : 'bg-white/10'}`} />
           ))}
         </div>
       )}
@@ -253,8 +276,8 @@ export default function RegistrationWizard() {
             </div>
 
             <div className="flex space-x-3 mt-8">
-              <button type="button" onClick={onSubmitFinal} disabled={isSubmitting} className="w-full bg-white text-black font-medium py-4 rounded-xl hover:bg-slate-200 transition-colors disabled:opacity-70 shadow-[0_0_20px_rgba(255,255,255,0.2)]">
-                {isSubmitting ? 'Finalizing...' : 'Confirm Registration'}
+              <button type="button" onClick={onSubmitFinal} disabled={isSubmitting} className="w-full bg-poster-accent text-poster-bg font-medium py-4 rounded-xl hover:bg-poster-accent-bright transition-colors disabled:opacity-70 shadow-[0_0_20px_rgba(140,174,176,0.2)]">
+                {isSubmitting ? 'Processing...' : 'Proceed to Payment'}
               </button>
             </div>
           </motion.div>
@@ -263,15 +286,58 @@ export default function RegistrationWizard() {
         {step === 4 && (
           <motion.div 
             key="step4"
+            initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <h3 className="text-2xl font-semibold mb-2">Payment Details</h3>
+            <p className="text-slate-300 text-sm mb-4">Please transfer the total amount of <strong className="text-white text-lg font-mono">RM {totalAmount.toFixed(2)}</strong> to the bank account below and upload your receipt.</p>
+            
+            <div className="bg-black/40 p-4 rounded-xl border border-white/10 mb-6 font-mono text-sm space-y-2">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Bank Name</span>
+                <span className="font-medium">Maybank</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Account Name</span>
+                <span className="font-medium">REVIVAL MINISTRIES</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Account Number</span>
+                <span className="font-medium tracking-widest text-poster-accent-bright">1234567890</span>
+              </div>
+            </div>
+
+            <form onSubmit={onUploadReceipt} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">Upload Payment Receipt</label>
+                <input 
+                  type="file" 
+                  name="receipt" 
+                  accept="image/*" 
+                  required
+                  className="w-full text-sm text-slate-300 file:mr-4 file:py-3 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-poster-accent file:text-poster-bg hover:file:bg-poster-accent-bright border border-white/10 rounded-lg bg-black/30"
+                />
+              </div>
+
+              <button type="submit" disabled={isSubmitting} className="w-full bg-poster-accent text-poster-bg font-medium py-4 rounded-xl hover:bg-poster-accent-bright transition-colors disabled:opacity-70 shadow-[0_0_20px_rgba(140,174,176,0.2)]">
+                {isSubmitting ? 'Uploading...' : 'Submit Proof'}
+              </button>
+            </form>
+          </motion.div>
+        )}
+
+        {step === 5 && (
+          <motion.div 
+            key="step5"
             initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
             className="text-center py-10"
           >
-            <div className="w-20 h-20 bg-green-500 rounded-full mx-auto flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(34,197,94,0.4)]">
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+            <div className="w-20 h-20 bg-poster-accent rounded-full mx-auto flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(140,174,176,0.4)]">
+              <svg className="w-10 h-10 text-poster-bg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
             </div>
             <h3 className="text-3xl font-bold mb-4">You're In!</h3>
-            <p className="text-slate-400 mb-8 max-w-sm mx-auto">
-              Your registration has been created. An email will be sent to you shortly with instructions on how to complete the payment via bank transfer.
+            <p className="text-slate-300 mb-8 max-w-sm mx-auto">
+              Your registration and payment receipt have been submitted. Our team will review the transaction and send your ticket confirmation to your email shortly.
             </p>
             <button type="button" onClick={() => window.location.reload()} className="bg-white/10 border border-white/20 text-white px-6 py-3 rounded-lg hover:bg-white/20 transition-colors">
               Register Another Person

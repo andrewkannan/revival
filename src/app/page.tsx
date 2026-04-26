@@ -20,7 +20,7 @@ export default function Home() {
             </p>
           </div>
           <div id="registration" className="bg-poster-bg-light/50 border border-poster-accent/20 rounded-2xl p-8 backdrop-blur-sm shadow-xl scroll-mt-12">
-            <h3 className="text-xl md:text-2xl font-bold mb-6 text-white uppercase tracking-wide">Get Your Revival Seats Now</h3>
+            <h3 className="text-xl md:text-2xl font-bold mb-6 text-white uppercase tracking-wide">Get Your Tickets Now!</h3>
             <RegistrationWizard />
           </div>
         </div>

@@ -160,3 +160,32 @@ export async function finalizeRegistration(data: RegistrationData, sessionId: st
     return { success: false, message: 'Database transaction failed.' };
   }
 }
+
+export async function uploadReceipt(registrationId: string, formData: FormData) {
+  try {
+    const file = formData.get('receipt') as File | null;
+    if (!file) {
+      return { success: false, message: 'No receipt uploaded.' };
+    }
+
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    
+    // Create Data URL
+    const mimeType = file.type || 'application/octet-stream';
+    const base64String = `data:${mimeType};base64,${buffer.toString('base64')}`;
+
+    await prisma.registration.update({
+      where: { id: registrationId },
+      data: {
+        receiptUrl: base64String,
+        status: 'PENDING_FOR_REVIEW',
+      }
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error uploading receipt:', error);
+    return { success: false, message: 'Failed to upload receipt. Please try again.' };
+  }
+}

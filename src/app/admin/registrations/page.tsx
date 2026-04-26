@@ -41,6 +41,7 @@ export default async function RegistrationsPage() {
                 <th className="px-6 py-4 font-medium">Location</th>
                 <th className="px-6 py-4 font-medium">Tickets</th>
                 <th className="px-6 py-4 font-medium">Amount</th>
+                <th className="px-6 py-4 font-medium">Receipt</th>
                 <th className="px-6 py-4 font-medium">Status</th>
                 <th className="px-6 py-4 font-medium">Action</th>
               </tr>
@@ -48,7 +49,7 @@ export default async function RegistrationsPage() {
             <tbody>
               {registrations.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
+                  <td colSpan={8} className="px-6 py-8 text-center text-slate-500">
                     No registrations found.
                   </td>
                 </tr>
@@ -71,6 +72,15 @@ export default async function RegistrationsPage() {
                     </td>
                     <td className="px-6 py-4 font-mono">
                       RM {reg.totalAmount.toString()}
+                    </td>
+                    <td className="px-6 py-4">
+                      {reg.receiptUrl ? (
+                        <a href={reg.receiptUrl} target="_blank" rel="noreferrer" className="text-poster-accent hover:text-white underline text-xs font-medium">
+                          View Proof
+                        </a>
+                      ) : (
+                        <span className="text-slate-500 text-xs">No Receipt</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
