@@ -2,8 +2,9 @@
 
 import React, { useState, useMemo } from 'react';
 import { RegistrationStatus, Registration, Attendee, OutreachLocation } from '@prisma/client';
-import { BadgeCheck, Clock, XCircle, AlertCircle, Search, X } from 'lucide-react';
+import { BadgeCheck, Clock, XCircle, AlertCircle, Search, X, Edit2 } from 'lucide-react';
 import StatusSelect from '@/components/admin/StatusSelect';
+import EditRegistrationModal, { EditData } from '@/components/admin/EditRegistrationModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
 type RegistrationWithAttendee = Omit<Registration, 'totalAmount'> & { 
@@ -20,6 +21,7 @@ export default function RegistrationsTable({ initialData }: Props) {
   const [statusFilter, setStatusFilter] = useState<RegistrationStatus | 'ALL'>('ALL');
   const [outreachFilter, setOutreachFilter] = useState<OutreachLocation | 'ALL'>('ALL');
   const [receiptImage, setReceiptImage] = useState<string | null>(null);
+  const [editingData, setEditingData] = useState<EditData | null>(null);
 
   const getStatusIcon = (status: RegistrationStatus) => {
     switch (status) {
@@ -192,7 +194,26 @@ export default function RegistrationsTable({ initialData }: Props) {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <StatusSelect registrationId={reg.id} currentStatus={reg.status} />
+                      <div className="flex items-center gap-2">
+                        <StatusSelect registrationId={reg.id} currentStatus={reg.status} />
+                        <button 
+                          onClick={() => setEditingData({
+                            id: reg.id,
+                            attendeeId: reg.attendee.id,
+                            name: reg.attendee.name,
+                            email: reg.attendee.email,
+                            phone: reg.attendee.phone,
+                            outreach: reg.attendee.outreach,
+                            totalAmount: reg.totalAmount,
+                            status: reg.status,
+                            receiptUrl: reg.receiptUrl
+                          })}
+                          className="p-1.5 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/10"
+                          title="Edit Details"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -230,6 +251,13 @@ export default function RegistrationsTable({ initialData }: Props) {
               </div>
             </motion.div>
           </motion.div>
+        )}
+
+        {editingData && (
+          <EditRegistrationModal 
+            data={editingData} 
+            onClose={() => setEditingData(null)} 
+          />
         )}
       </AnimatePresence>
     </div>

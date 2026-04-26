@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers';
 import prisma from '@/lib/prisma';
-import { RegistrationStatus } from '@prisma/client';
+import { RegistrationStatus, OutreachLocation } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { sendPaymentRejectedEmail } from '@/lib/email';
 
@@ -114,6 +114,57 @@ export async function updateRegistrationStatus(id: string, status: RegistrationS
   } catch (e) {
     console.error("Failed to update registration status", e);
     return { success: false, message: "Failed to update status." };
+  }
+}
+
+export async function updateRegistrationDetails(
+  id: string,
+  attendeeId: string,
+  data: {
+    name: string;
+    email: string;
+    phone: string;
+    outreach: OutreachLocation;
+    totalAmount: number;
+    status: RegistrationStatus;
+    receiptBase64?: string | null;
+  }
+) {
+  try {
+    const oldReg = await prisma.registration.findUnique({ where: { id } });
+    
+    const updateData: any = {
+      status: data.status,
+      totalAmount: data.totalAmount,
+    };
+    if (data.receiptBase64) {
+      updateData.receiptUrl = data.receiptBase64;
+    }
+
+    await prisma.registration.update({
+      where: { id },
+      data: updateData
+    });
+
+    await prisma.attendee.update({
+      where: { id: attendeeId },
+      data: {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        outreach: data.outreach,
+      }
+    });
+
+    if (data.status === 'PAYMENT_REJECTED' && oldReg?.status !== 'PAYMENT_REJECTED') {
+      await sendPaymentRejectedEmail(data.email, data.name);
+    }
+    
+    revalidatePath('/admin/registrations');
+    return { success: true };
+  } catch (e) {
+    console.error("Failed to update registration details", e);
+    return { success: false, message: "Failed to update details." };
   }
 }
 
