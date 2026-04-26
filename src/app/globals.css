@@ -10,6 +10,12 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* Poster Colors */
+  --color-poster-bg: #1c272a;
+  --color-poster-bg-light: #2c3a3e;
+  --color-poster-accent: #8caeb0;
+  --color-poster-accent-bright: #a4c5c6;
 }
 
 @media (prefers-color-scheme: dark) {

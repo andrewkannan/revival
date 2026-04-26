@@ -18,8 +18,7 @@ export default function Hero() {
       MouseConstraint = Matter.MouseConstraint,
       Mouse = Matter.Mouse,
       Composite = Matter.Composite,
-      Bodies = Matter.Bodies,
-      Events = Matter.Events;
+      Bodies = Matter.Bodies;
 
     // create an engine
     const engine = Engine.create();
@@ -62,12 +61,13 @@ export default function Hero() {
 
     Composite.add(world, [ground, leftWall, rightWall, ceiling]);
 
-    // add bodies
-    const colors = ['#1e293b', '#334155', '#475569', '#cbd5e1', '#0f172a'];
+    // add bodies using poster colors
+    // We use the dark slate, muted cyan, and white.
+    const colors = ['#8caeb0', '#a4c5c6', '#2c3a3e', '#ffffff'];
     
     const bodies: Matter.Body[] = [];
-    for (let i = 0; i < 40; i++) {
-      const radius = 20 + Math.random() * 30;
+    for (let i = 0; i < 35; i++) {
+      const radius = 15 + Math.random() * 30;
       const x = Math.random() * width;
       const y = -100 - Math.random() * 800; // start above screen
       
@@ -77,32 +77,49 @@ export default function Hero() {
       let body;
       if (isCircle) {
         body = Bodies.circle(x, y, radius, {
-          restitution: 0.6,
-          friction: 0.1,
+          restitution: 0.8,
+          friction: 0.05,
           render: {
             fillStyle: color,
-            strokeStyle: '#ffffff20',
+            strokeStyle: '#00000020',
             lineWidth: 1
           }
         });
       } else {
-        const width = radius * 2;
-        const height = radius * 1.5;
-        body = Bodies.rectangle(x, y, width, height, {
-          chamfer: { radius: 10 },
+        const w = radius * 2.5;
+        const h = radius * 0.8;
+        body = Bodies.rectangle(x, y, w, h, {
+          chamfer: { radius: 4 },
           restitution: 0.6,
           friction: 0.1,
           render: {
             fillStyle: color,
-            strokeStyle: '#ffffff20',
+            strokeStyle: '#00000020',
             lineWidth: 1
           }
         });
       }
       bodies.push(body);
     }
-    
-    Composite.add(world, bodies);
+
+    // Create a few larger, dramatic text-block-like shapes dropping down
+    const textBlocks: Matter.Body[] = [];
+    const textColors = ['#8caeb0', '#ffffff', '#a4c5c6'];
+    for(let i=0; i<6; i++) {
+        const body = Bodies.rectangle(Math.random() * width, -200 - Math.random() * 400, 140, 45, {
+          chamfer: { radius: 2 },
+          restitution: 0.5,
+          friction: 0.1,
+          render: {
+            fillStyle: textColors[i % textColors.length],
+            strokeStyle: '#1c272a',
+            lineWidth: 2
+          }
+        });
+        textBlocks.push(body);
+    }
+
+    Composite.add(world, [...bodies, ...textBlocks]);
 
     // add mouse control
     const mouse = Mouse.create(render.canvas);
@@ -161,10 +178,17 @@ export default function Hero() {
   }, []);
 
   return (
-    <div className="relative w-full h-[80vh] min-h-[600px] overflow-hidden bg-black text-white rounded-b-3xl">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-900 to-black z-0" />
+    <div className="relative w-full h-[90vh] min-h-[700px] overflow-hidden bg-poster-bg text-white">
+      {/* Background Poster Aesthetic - Massive Vertical Text */}
+      <div className="absolute inset-0 overflow-hidden flex items-center justify-center opacity-20 pointer-events-none select-none">
+        <div className="text-[25vw] font-black text-poster-accent leading-none tracking-tighter mix-blend-screen -rotate-6 md:rotate-0 flex whitespace-nowrap opacity-30">
+          REVIVAL
+        </div>
+      </div>
       
+      {/* Subtle radial glow overlay */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-poster-bg-light/40 via-poster-bg/80 to-poster-bg z-0 pointer-events-none" />
+
       {/* Matter.js Canvas Container */}
       <div 
         ref={sceneRef} 
@@ -172,46 +196,83 @@ export default function Hero() {
       />
       
       {/* Hero Content Overlay */}
-      <div className="absolute inset-0 z-20 pointer-events-none flex flex-col items-center justify-center p-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+      <div className="absolute inset-0 z-20 pointer-events-none flex flex-col justify-end p-6 md:p-12 pb-24 max-w-7xl mx-auto">
+        
+        {/* Top Detail */}
+        <motion.div 
+           className="absolute top-10 right-8 md:top-16 md:right-12 text-right"
+           initial={{ opacity: 0, x: 20 }}
+           animate={{ opacity: 1, x: 0 }}
+           transition={{ duration: 0.8, delay: 0.6 }}
         >
-          <span className="px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-sm font-medium backdrop-blur-md mb-6 inline-block">
-            2026 Registration Open
-          </span>
+            <p className="text-poster-accent text-sm md:text-base font-bold tracking-[0.3em] uppercase drop-shadow-md">THEME: ACTS 2:17-18</p>
         </motion.div>
-        
-        <motion.h1 
-          className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        >
-          REVIVAL
-        </motion.h1>
-        
-        <motion.p 
-          className="text-lg md:text-xl text-slate-400 max-w-2xl mb-10 font-light"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        >
-          Secure your place at the most anticipated conference of the year. 
-          Minimalist design, maximum impact.
-        </motion.p>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="pointer-events-auto"
-        >
-          <button className="bg-white text-black px-8 py-4 rounded-full font-medium hover:scale-105 transition-transform duration-300 shadow-[0_0_40px_rgba(255,255,255,0.3)]">
-            Register Now
-          </button>
-        </motion.div>
+
+        {/* Main Title Group */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between w-full">
+            <div className="flex-1">
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <span className="px-4 py-1.5 rounded bg-poster-accent/20 border border-poster-accent/30 text-poster-accent-bright text-xs font-bold tracking-[0.2em] backdrop-blur-md mb-6 inline-block uppercase shadow-lg">
+                    Registration Open
+                  </span>
+                </motion.div>
+                
+                <motion.h1 
+                  className="text-7xl md:text-8xl lg:text-[11rem] font-black tracking-tighter mb-2 text-poster-accent drop-shadow-2xl"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ lineHeight: 0.85 }}
+                >
+                  REVIVAL
+                </motion.h1>
+                <motion.h2 
+                  className="text-4xl md:text-6xl lg:text-8xl font-bold tracking-tighter text-white drop-shadow-lg"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  2026
+                </motion.h2>
+            </div>
+
+            <div className="mt-12 md:mt-0 flex flex-col items-start md:items-end space-y-6">
+                <motion.div 
+                    className="text-left md:text-right"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                >
+                    <p className="text-white font-bold text-lg md:text-xl uppercase tracking-[0.2em] drop-shadow-md">Location</p>
+                    <p className="text-poster-accent-bright md:text-lg font-medium tracking-wide">LEVEL 8, MENARA ZURICH</p>
+                </motion.div>
+                
+                <motion.div 
+                    className="text-left md:text-right"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                >
+                    <p className="text-white font-bold text-lg md:text-xl uppercase tracking-[0.2em] drop-shadow-md">Date</p>
+                    <p className="text-poster-accent-bright md:text-lg font-medium tracking-wide">26-28 JUNE</p>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.8, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                  className="pointer-events-auto pt-6"
+                >
+                  <button className="bg-poster-accent hover:bg-poster-accent-bright text-poster-bg px-12 py-5 rounded-sm font-bold uppercase tracking-[0.15em] hover:-translate-y-1 transition-all duration-300 shadow-[0_0_30px_rgba(140,174,176,0.3)] hover:shadow-[0_0_40px_rgba(164,197,198,0.5)]">
+                    Register Now
+                  </button>
+                </motion.div>
+            </div>
+        </div>
       </div>
     </div>
   );
