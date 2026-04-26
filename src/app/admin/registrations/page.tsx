@@ -1,5 +1,5 @@
 import prisma from '@/lib/prisma';
-import { updateRegistrationStatus } from '@/actions/admin';
+import StatusSelect from '@/components/admin/StatusSelect';
 
 export const dynamic = 'force-dynamic';
 import { RegistrationStatus } from '@prisma/client';
@@ -91,23 +91,7 @@ export default async function RegistrationsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <form action={async (formData) => {
-                        'use server';
-                        const status = formData.get('status') as RegistrationStatus;
-                        await updateRegistrationStatus(reg.id, status);
-                      }}>
-                        <select 
-                          name="status"
-                          defaultValue={reg.status}
-                          onChange={(e) => e.target.form?.requestSubmit()}
-                          className="bg-black/50 border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-white/30"
-                        >
-                          <option value="PENDING_FOR_PAYMENT">Pending Payment</option>
-                          <option value="PENDING_FOR_REVIEW">Pending Review</option>
-                          <option value="SEAT_SECURED">Seat Secured</option>
-                          <option value="CONTACT_ADMIN">Contact Admin</option>
-                        </select>
-                      </form>
+                      <StatusSelect registrationId={reg.id} currentStatus={reg.status} />
                     </td>
                   </tr>
                 ))
