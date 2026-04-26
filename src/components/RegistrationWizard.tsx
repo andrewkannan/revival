@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { checkCapacity, lockTicketsAction, finalizeRegistration, getPricing, uploadReceipt } from '@/actions/registration';
+import { checkCapacity, lockTicketsAction, releaseLockAction, finalizeRegistration, getPricing, uploadReceipt } from '@/actions/registration';
 
 const OutreachLocationEnum = z.enum([
   'JOHOR_BAHRU', 'ISKANDAR_PUTERI', 'TAMAN_DAYA', 
@@ -86,6 +86,13 @@ export default function RegistrationWizard() {
   const prevStep = () => {
     setStep(prev => prev - 1);
     setError(null);
+  };
+
+  const cancelLock = async () => {
+    setIsLocking(true);
+    await releaseLockAction(sessionId);
+    setStep(2);
+    setIsLocking(false);
   };
 
   const onSubmitFinal = async () => {
@@ -308,9 +315,9 @@ export default function RegistrationWizard() {
             <h3 className="text-2xl font-semibold mb-2">Order Summary</h3>
             
             <div className="space-y-3 bg-black/30 p-5 rounded-xl border border-white/5">
-              <div className="flex justify-between text-slate-300">
-                <span>{formData.name}</span>
-                <span>{formData.email}</span>
+              <div className="space-y-1">
+                <div className="font-medium text-white text-lg">{formData.name}</div>
+                <div className="text-slate-400 text-sm">{formData.email}</div>
               </div>
               <hr className="border-white/10" />
               {formData.adultTickets > 0 && (
@@ -333,7 +340,10 @@ export default function RegistrationWizard() {
             </div>
 
             <div className="flex space-x-3 mt-8">
-              <button type="button" onClick={onSubmitFinal} disabled={isSubmitting} className="w-full bg-poster-accent text-poster-bg font-medium py-4 rounded-xl hover:bg-poster-accent-bright transition-colors disabled:opacity-70 shadow-[0_0_20px_rgba(140,174,176,0.2)]">
+              <button type="button" onClick={cancelLock} disabled={isSubmitting} className="px-6 py-3 rounded-lg border border-white/20 hover:bg-white/10 transition-colors">
+                Back
+              </button>
+              <button type="button" onClick={onSubmitFinal} disabled={isSubmitting} className="flex-1 bg-poster-accent text-poster-bg font-medium py-4 rounded-xl hover:bg-poster-accent-bright transition-colors disabled:opacity-70 shadow-[0_0_20px_rgba(140,174,176,0.2)]">
                 {isSubmitting ? 'Processing...' : 'Proceed to Payment'}
               </button>
             </div>
@@ -361,6 +371,10 @@ export default function RegistrationWizard() {
               <div className="flex justify-between">
                 <span className="text-slate-400">Account Number</span>
                 <span className="font-medium tracking-widest text-poster-accent-bright">1234567890</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Payment Reference</span>
+                <span className="font-medium tracking-widest text-poster-accent-bright">CCCBILREVIVAL</span>
               </div>
             </div>
 

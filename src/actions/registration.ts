@@ -59,6 +59,15 @@ export async function lockTicketsAction(sessionId: string, adult: number, kids: 
   }
 }
 
+export async function releaseLockAction(sessionId: string) {
+  try {
+    await releaseTicketLock(sessionId);
+    return { success: true };
+  } catch (error) {
+    return { success: false };
+  }
+}
+
 export async function getPricing() {
   const adminConfig = await prisma.adminConfig.findUnique({ where: { id: 1 } });
   
