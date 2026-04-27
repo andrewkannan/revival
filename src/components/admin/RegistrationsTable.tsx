@@ -2,7 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { RegistrationStatus, Registration, Attendee, OutreachLocation } from '@prisma/client';
-import { BadgeCheck, Clock, XCircle, AlertCircle, Search, X, Edit2 } from 'lucide-react';
+import { BadgeCheck, Clock, XCircle, AlertCircle, Search, X, Edit2, Download, FileArchive } from 'lucide-react';
+import JSZip from 'jszip';
 import StatusSelect from '@/components/admin/StatusSelect';
 import EditRegistrationModal, { EditData } from '@/components/admin/EditRegistrationModal';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,6 +24,69 @@ export default function RegistrationsTable({ initialData }: Props) {
   const [outreachFilter, setOutreachFilter] = useState<OutreachLocation | 'ALL'>('ALL');
   const [receiptModal, setReceiptModal] = useState<{ url: string; queueNum: string } | null>(null);
   const [editingData, setEditingData] = useState<EditData | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const exportCSV = () => {
+    const headers = ['Queue No', 'Name', 'Email', 'Phone', 'Location', 'Adult Tickets', 'Kids Tickets', 'Total Amount', 'Status', 'Date'];
+    const rows = filteredAndSorted.map(reg => [
+      formatQueue(reg.orderNumber),
+      `"${reg.attendee.name.replace(/"/g, '""')}"`,
+      reg.attendee.email,
+      reg.attendee.phone,
+      reg.attendee.outreach,
+      reg.adultTickets,
+      reg.kidsTickets,
+      reg.totalAmount,
+      reg.status,
+      new Date(reg.createdAt).toLocaleDateString()
+    ]);
+    
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Registrations_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportReceiptsZip = async () => {
+    setIsExporting(true);
+    try {
+      const zip = new JSZip();
+      let hasFiles = false;
+      
+      filteredAndSorted.forEach(reg => {
+        if (reg.receiptUrl) {
+          hasFiles = true;
+          const base64Data = reg.receiptUrl.split(',')[1] || reg.receiptUrl;
+          zip.file(`${formatQueue(reg.orderNumber)}_${reg.attendee.name.replace(/[^a-zA-Z0-9]/g, '_')}_Receipt.jpg`, base64Data, { base64: true });
+        }
+      });
+
+      if (!hasFiles) {
+        alert("No receipts found in the current filtered list.");
+        setIsExporting(false);
+        return;
+      }
+
+      const content = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(content);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Receipts_${new Date().toISOString().split('T')[0]}.zip`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      console.error("Error generating zip:", e);
+      alert("Failed to generate zip file.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const formatQueue = (num: number) => 'R' + String(num).padStart(5, '0');
 
@@ -118,6 +182,23 @@ export default function RegistrationsTable({ initialData }: Props) {
           <option value="SIMPANG_RENGGAM">Simpang Renggam</option>
           <option value="OTHERS">Others</option>
         </select>
+      </div>
+
+      {/* Export Actions */}
+      <div className="flex flex-col sm:flex-row justify-end gap-3">
+        <button 
+          onClick={exportCSV} 
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm text-slate-300 hover:text-white transition-colors"
+        >
+          <Download className="w-4 h-4" /> Export CSV (Excel)
+        </button>
+        <button 
+          onClick={exportReceiptsZip} 
+          disabled={isExporting}
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-poster-accent/20 hover:bg-poster-accent/30 text-poster-accent border border-poster-accent/30 rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+        >
+          <FileArchive className="w-4 h-4" /> {isExporting ? 'Zipping...' : 'Download Receipts (ZIP)'}
+        </button>
       </div>
 
       {/* Table & Mobile Cards */}
