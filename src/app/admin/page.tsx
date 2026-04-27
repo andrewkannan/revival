@@ -2,7 +2,7 @@ import { getDashboardStats } from '@/actions/admin';
 import { getActiveLocksCount } from '@/lib/ticket-lock';
 
 export const dynamic = 'force-dynamic';
-import { Users, Ticket, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Users, Ticket, Clock, CheckCircle2, AlertCircle, Banknote } from 'lucide-react';
 
 export default async function AdminDashboard() {
   const stats = await getDashboardStats();
@@ -78,7 +78,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center">
@@ -88,6 +88,28 @@ export default async function AdminDashboard() {
           </div>
           <p className="text-3xl font-bold">{stats.totalRegistrations}</p>
           <p className="text-sm text-slate-500 mt-1">Unique registrations</p>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-10 h-10 bg-emerald-500/10 rounded-full flex items-center justify-center">
+              <Banknote className="w-5 h-5 text-emerald-400" />
+            </div>
+            <h3 className="font-medium text-slate-400">Paid Revenue</h3>
+          </div>
+          <p className="text-3xl font-bold text-emerald-400">RM {stats.totalPaidAmount.toFixed(2)}</p>
+          <p className="text-sm text-slate-500 mt-1">From secured seats</p>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-10 h-10 bg-amber-500/10 rounded-full flex items-center justify-center">
+              <Banknote className="w-5 h-5 text-amber-400" />
+            </div>
+            <h3 className="font-medium text-slate-400">Pending Revenue</h3>
+          </div>
+          <p className="text-3xl font-bold text-amber-400">RM {stats.totalPendingAmount.toFixed(2)}</p>
+          <p className="text-sm text-slate-500 mt-1">Awaiting payment/review</p>
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">

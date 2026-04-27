@@ -199,6 +199,16 @@ export async function getDashboardStats() {
 
   const totalRegistrations = await prisma.registration.count();
 
+  const paidAmountAgg = await prisma.registration.aggregate({
+    _sum: { totalAmount: true },
+    where: { status: 'SEAT_SECURED' }
+  });
+
+  const pendingAmountAgg = await prisma.registration.aggregate({
+    _sum: { totalAmount: true },
+    where: { status: { in: ['PENDING_FOR_PAYMENT', 'PENDING_FOR_REVIEW'] } }
+  });
+
   const getCount = (stats: any[], type: 'ADULT' | 'KIDS') => 
     stats.find(s => s.ticketType === type)?._count || 0;
 
@@ -209,6 +219,8 @@ export async function getDashboardStats() {
     securedKids: getCount(securedStats, 'KIDS'),
     pendingAdults: getCount(pendingStats, 'ADULT'),
     pendingKids: getCount(pendingStats, 'KIDS'),
-    totalRegistrations
+    totalRegistrations,
+    totalPaidAmount: Number(paidAmountAgg._sum.totalAmount || 0),
+    totalPendingAmount: Number(pendingAmountAgg._sum.totalAmount || 0)
   };
 }
