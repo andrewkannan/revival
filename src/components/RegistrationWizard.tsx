@@ -379,9 +379,8 @@ export default function RegistrationWizard() {
             </div>
 
             <form onSubmit={onUploadReceipt} className="space-y-6">
-              <div className="bg-poster-accent/10 border border-poster-accent/20 rounded-lg p-4 text-sm text-slate-300">
-                <strong className="text-poster-accent-bright block mb-1">Upload Guide:</strong> 
-                Please take a screenshot or save the PDF receipt of your successful transfer. Ensure the <strong className="text-white">amount, date, and reference</strong> are clearly visible to help our team verify your payment quickly.
+              <div className="bg-poster-accent/10 border border-poster-accent/20 rounded-lg p-4 text-sm text-slate-300 text-center">
+                Provide a screenshot or PDF receipt showing amount, date, and reference for payment verification.
               </div>
 
               <div>
