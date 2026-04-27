@@ -10,7 +10,8 @@ export default function SettingsPage() {
   const [message, setMessage] = useState({ text: '', type: '' });
   
   const [formData, setFormData] = useState({
-    totalCapacity: 400,
+    adultCapacity: 300,
+    kidsCapacity: 100,
     isEarlyBird: true,
     earlyBirdEndDate: '',
     adultPriceEarlyBird: 50,
@@ -22,7 +23,8 @@ export default function SettingsPage() {
   useEffect(() => {
     getAdminConfig().then((config) => {
       setFormData({
-        totalCapacity: config.totalCapacity,
+        adultCapacity: config.adultCapacity,
+        kidsCapacity: config.kidsCapacity,
         isEarlyBird: config.isEarlyBird,
         earlyBirdEndDate: config.earlyBirdEndDate ? new Date(config.earlyBirdEndDate).toISOString().split('T')[0] : '',
         adultPriceEarlyBird: Number(config.adultPriceEarlyBird),
@@ -96,18 +98,31 @@ export default function SettingsPage() {
           <h2 className="text-xl font-semibold mb-6">General</h2>
           
           <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Total Capacity</label>
-              <input
-                type="number"
-                name="totalCapacity"
-                value={formData.totalCapacity}
-                onChange={handleChange}
-                min="0"
-                className="w-full max-w-xs bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30"
-              />
-              <p className="text-xs text-slate-500 mt-2">Maximum number of total seats available for booking.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Adult Capacity</label>
+                <input
+                  type="number"
+                  name="adultCapacity"
+                  value={formData.adultCapacity}
+                  onChange={handleChange}
+                  min="0"
+                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Kids Capacity</label>
+                <input
+                  type="number"
+                  name="kidsCapacity"
+                  value={formData.kidsCapacity}
+                  onChange={handleChange}
+                  min="0"
+                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30"
+                />
+              </div>
             </div>
+            <p className="text-xs text-slate-500 mt-2">Maximum number of seats available for booking.</p>
 
             <div className="flex items-center gap-3 pt-4 border-t border-white/5">
               <input

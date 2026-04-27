@@ -64,7 +64,7 @@ export async function releaseTicketLock(sessionId: string): Promise<void> {
   } catch (e) {}
 }
 
-export async function getActiveLocksCount(): Promise<number> {
+export async function getActiveLocksCount(): Promise<{ activeAdults: number, activeKids: number }> {
   let totalAdult = 0;
   let totalKids = 0;
 
@@ -79,7 +79,7 @@ export async function getActiveLocksCount(): Promise<number> {
     }
   }
 
-  if (!process.env.REDIS_URL) return totalAdult + totalKids;
+  if (!process.env.REDIS_URL) return { activeAdults: totalAdult, activeKids: totalKids };
 
   try {
     let cursor = '0';
@@ -104,5 +104,5 @@ export async function getActiveLocksCount(): Promise<number> {
     console.warn("Failed to get active locks from Redis, returning memory locks only.");
   }
   
-  return totalAdult + totalKids;
+  return { activeAdults: totalAdult, activeKids: totalKids };
 }

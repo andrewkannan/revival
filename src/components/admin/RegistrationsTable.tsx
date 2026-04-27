@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 type RegistrationWithAttendee = Omit<Registration, 'totalAmount'> & { 
   totalAmount: string;
+  orderNumber: number;
   attendee: Attendee; 
 };
 
@@ -20,8 +21,10 @@ export default function RegistrationsTable({ initialData }: Props) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<RegistrationStatus | 'ALL'>('ALL');
   const [outreachFilter, setOutreachFilter] = useState<OutreachLocation | 'ALL'>('ALL');
-  const [receiptImage, setReceiptImage] = useState<string | null>(null);
+  const [receiptModal, setReceiptModal] = useState<{ url: string; queueNum: string } | null>(null);
   const [editingData, setEditingData] = useState<EditData | null>(null);
+
+  const formatQueue = (num: number) => 'R' + String(num).padStart(5, '0');
 
   const getStatusIcon = (status: RegistrationStatus) => {
     switch (status) {
@@ -114,6 +117,7 @@ export default function RegistrationsTable({ initialData }: Props) {
           <table className="w-full text-left text-sm text-slate-300">
             <thead className="text-xs uppercase bg-white/5 text-slate-400 border-b border-white/10">
               <tr>
+                <th className="px-6 py-4 font-medium">Queue No.</th>
                 <th className="px-6 py-4 font-medium">Attendee</th>
                 <th className="px-6 py-4 font-medium">Contact</th>
                 <th className="px-6 py-4 font-medium">Location</th>
@@ -127,7 +131,7 @@ export default function RegistrationsTable({ initialData }: Props) {
             <tbody>
               {filteredAndSorted.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan={9} className="px-6 py-12 text-center text-slate-500">
                     <div className="flex flex-col items-center justify-center">
                       <Search className="w-8 h-8 mb-2 opacity-50" />
                       <p>No registrations match your filters.</p>
@@ -143,6 +147,9 @@ export default function RegistrationsTable({ initialData }: Props) {
                     } ${reg.status === 'PENDING_FOR_REVIEW' ? 'bg-poster-accent/10 border-l-4 border-l-poster-accent' : 
                         reg.status === 'PAYMENT_REJECTED' ? 'bg-red-500/10 border-l-4 border-l-red-500' : 'border-l-4 border-l-transparent'}`}
                   >
+                    <td className="px-6 py-4 font-mono font-bold text-poster-accent">
+                      {formatQueue(reg.orderNumber)}
+                    </td>
                     <td className="px-6 py-4 font-medium text-white">
                       {reg.attendee.name}
                     </td>
@@ -176,7 +183,7 @@ export default function RegistrationsTable({ initialData }: Props) {
                     <td className="px-6 py-4">
                       {reg.receiptUrl ? (
                         <button 
-                          onClick={() => setReceiptImage(reg.receiptUrl)}
+                          onClick={() => setReceiptModal({ url: reg.receiptUrl!, queueNum: formatQueue(reg.orderNumber) })}
                           className="text-poster-accent hover:text-poster-accent-bright underline text-xs font-medium cursor-pointer transition-colors"
                         >
                           View Proof
@@ -206,7 +213,8 @@ export default function RegistrationsTable({ initialData }: Props) {
                             outreach: reg.attendee.outreach,
                             totalAmount: reg.totalAmount,
                             status: reg.status,
-                            receiptUrl: reg.receiptUrl
+                            receiptUrl: reg.receiptUrl,
+                            orderNumber: reg.orderNumber
                           })}
                           className="p-1.5 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/10"
                           title="Edit Details"
@@ -225,13 +233,13 @@ export default function RegistrationsTable({ initialData }: Props) {
 
       {/* Modal */}
       <AnimatePresence>
-        {receiptImage && (
+        {receiptModal && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
-            onClick={() => setReceiptImage(null)}
+            onClick={() => setReceiptModal(null)}
           >
             <motion.div 
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -241,13 +249,22 @@ export default function RegistrationsTable({ initialData }: Props) {
               onClick={e => e.stopPropagation()}
             >
               <div className="flex justify-between items-center p-4 border-b border-white/10 bg-white/5">
-                <h3 className="font-semibold text-white">Payment Receipt</h3>
-                <button onClick={() => setReceiptImage(null)} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white">
-                  <X className="w-5 h-5" />
-                </button>
+                <h3 className="font-semibold text-white">Payment Receipt - {receiptModal.queueNum}</h3>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={receiptModal.url}
+                    download={`${receiptModal.queueNum}_Receipt.jpg`}
+                    className="px-4 py-2 bg-poster-accent text-poster-bg text-sm font-medium rounded-lg hover:bg-poster-accent-bright transition-colors"
+                  >
+                    Download Receipt
+                  </a>
+                  <button onClick={() => setReceiptModal(null)} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white ml-2">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
               <div className="overflow-auto p-4 flex justify-center items-center bg-black/50 min-h-[50vh]">
-                <img src={receiptImage} alt="Payment Receipt" className="max-w-full h-auto rounded-xl shadow-2xl" />
+                <img src={receiptModal.url} alt="Payment Receipt" className="max-w-full h-auto rounded-xl shadow-2xl" />
               </div>
             </motion.div>
           </motion.div>

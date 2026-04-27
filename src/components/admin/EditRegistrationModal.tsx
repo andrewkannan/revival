@@ -9,6 +9,7 @@ import { updateRegistrationDetails } from '@/actions/admin';
 export type EditData = {
   id: string;
   attendeeId: string;
+  orderNumber: number;
   name: string;
   email: string;
   phone: string;
@@ -141,7 +142,7 @@ export default function EditRegistrationModal({ data, onClose }: Props) {
         onClick={e => e.stopPropagation()}
       >
         <div className="flex justify-between items-center p-6 border-b border-white/10 bg-white/5">
-          <h2 className="text-xl font-bold text-white">Edit Registration</h2>
+          <h2 className="text-xl font-bold text-white">Edit Registration (R{String(data.orderNumber).padStart(5, '0')})</h2>
           <button onClick={onClose} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white">
             <X className="w-5 h-5" />
           </button>

@@ -60,6 +60,7 @@ model Registration {
   status        RegistrationStatus @default(PENDING_FOR_PAYMENT)
   receiptUrl    String?            // URL for uploaded bank receipt
   payLater      Boolean            @default(false)
+  orderNumber   Int                @unique @default(autoincrement())
   tickets       Ticket[]
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
@@ -79,7 +80,8 @@ model Ticket {
 // Single-row table to handle admin capacity updates & dynamic prices
 model AdminConfig {
   id                   Int      @id @default(1) 
-  totalCapacity        Int      @default(400)
+  adultCapacity        Int      @default(300)
+  kidsCapacity         Int      @default(100)
   isEarlyBird          Boolean  @default(true)
   adultPriceEarlyBird  Decimal  @db.Decimal(10, 2)
   kidsPriceEarlyBird   Decimal  @db.Decimal(10, 2)

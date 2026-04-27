@@ -54,7 +54,8 @@ export async function getAdminConfig() {
     config = await prisma.adminConfig.create({
       data: {
         id: 1,
-        totalCapacity: 400,
+        adultCapacity: 300,
+        kidsCapacity: 100,
         isEarlyBird: true,
         adultPriceEarlyBird: 50,
         kidsPriceEarlyBird: 25,
@@ -68,7 +69,8 @@ export async function getAdminConfig() {
 }
 
 export async function updateAdminConfig(data: {
-  totalCapacity: number;
+  adultCapacity: number;
+  kidsCapacity: number;
   isEarlyBird: boolean;
   adultPriceEarlyBird: number;
   kidsPriceEarlyBird: number;
@@ -171,30 +173,42 @@ export async function updateRegistrationDetails(
 export async function getDashboardStats() {
   const config = await getAdminConfig();
   
-  const [totalRegistrations, securedSeats, pendingSeats] = await Promise.all([
-    prisma.registration.count(),
-    prisma.ticket.count({
-      where: {
-        registration: {
-          status: 'SEAT_SECURED'
+  // Group secured tickets by type
+  const securedStats = await prisma.ticket.groupBy({
+    by: ['ticketType'],
+    where: {
+      registration: {
+        status: 'SEAT_SECURED'
+      }
+    },
+    _count: true
+  });
+
+  // Group pending tickets by type
+  const pendingStats = await prisma.ticket.groupBy({
+    by: ['ticketType'],
+    where: {
+      registration: {
+        status: {
+          in: ['PENDING_FOR_PAYMENT', 'PENDING_FOR_REVIEW']
         }
       }
-    }),
-    prisma.ticket.count({
-      where: {
-        registration: {
-          status: {
-            in: ['PENDING_FOR_PAYMENT', 'PENDING_FOR_REVIEW']
-          }
-        }
-      }
-    })
-  ]);
+    },
+    _count: true
+  });
+
+  const totalRegistrations = await prisma.registration.count();
+
+  const getCount = (stats: any[], type: 'ADULT' | 'KIDS') => 
+    stats.find(s => s.ticketType === type)?._count || 0;
 
   return {
-    capacity: config.totalCapacity,
-    securedSeats,
-    pendingSeats,
+    adultCapacity: config.adultCapacity,
+    kidsCapacity: config.kidsCapacity,
+    securedAdults: getCount(securedStats, 'ADULT'),
+    securedKids: getCount(securedStats, 'KIDS'),
+    pendingAdults: getCount(pendingStats, 'ADULT'),
+    pendingKids: getCount(pendingStats, 'KIDS'),
     totalRegistrations
   };
 }
