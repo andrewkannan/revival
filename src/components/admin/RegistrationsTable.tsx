@@ -26,6 +26,15 @@ export default function RegistrationsTable({ initialData }: Props) {
 
   const formatQueue = (num: number) => 'R' + String(num).padStart(5, '0');
 
+  const formatPhoneForWhatsapp = (phone: string) => {
+    let cleaned = phone.replace(/[^0-9]/g, '');
+    // If it starts with 0 (e.g., 0123456789), replace with 60 (Malaysia code)
+    if (cleaned.startsWith('0')) {
+      cleaned = '6' + cleaned;
+    }
+    return cleaned;
+  };
+
   const getStatusIcon = (status: RegistrationStatus) => {
     switch (status) {
       case 'SEAT_SECURED': return <BadgeCheck className="w-4 h-4 text-emerald-400" />;
@@ -158,7 +167,7 @@ export default function RegistrationsTable({ initialData }: Props) {
                       <div className="text-slate-500 text-xs mt-1 flex items-center gap-2">
                         {reg.attendee.phone}
                         <a 
-                          href={`https://wa.me/${reg.attendee.phone.replace(/[^0-9]/g, '')}?text=Hi ${encodeURIComponent(reg.attendee.name)}, regarding your REVIVAL registration...`} 
+                          href={`https://wa.me/${formatPhoneForWhatsapp(reg.attendee.phone)}?text=Hi ${encodeURIComponent(reg.attendee.name)}, regarding your REVIVAL registration...`} 
                           target="_blank" 
                           rel="noreferrer"
                           className="text-emerald-400 hover:text-emerald-300 transition-colors"
