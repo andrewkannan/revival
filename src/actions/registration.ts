@@ -8,14 +8,26 @@ export async function checkCapacity(requestedAdults: number, requestedKids: numb
   try {
     const totalRequested = requestedAdults + requestedKids;
     
-    // 1. Get Admin Config for total capacity
+    // 1. Get Admin Config for capacities
     const adminConfig = await prisma.adminConfig.findUnique({ where: { id: 1 } });
-    const totalCapacity = adminConfig?.totalCapacity || 400; // default 400
+    const adultCapacity = adminConfig?.adultCapacity || 300; // default 300
+    const kidsCapacity = adminConfig?.kidsCapacity || 100; // default 100
 
     // 2. Get tickets already stored in Postgres (SEAT_SECURED or PENDING)
-    // We count all tickets that do not belong to a CONTACT_ADMIN or failed registration.
-    const dbTicketsCount = await prisma.ticket.count({
+    const dbAdultTicketsCount = await prisma.ticket.count({
       where: {
+        ticketType: 'ADULT',
+        registration: {
+          status: {
+            in: ['SEAT_SECURED', 'PENDING_FOR_PAYMENT', 'PENDING_FOR_REVIEW']
+          }
+        }
+      }
+    });
+
+    const dbKidsTicketsCount = await prisma.ticket.count({
+      where: {
+        ticketType: 'KIDS',
         registration: {
           status: {
             in: ['SEAT_SECURED', 'PENDING_FOR_PAYMENT', 'PENDING_FOR_REVIEW']
@@ -25,13 +37,14 @@ export async function checkCapacity(requestedAdults: number, requestedKids: numb
     });
 
     // 3. Get currently active Redis locks
-    const activeRedisLocksCount = await getActiveLocksCount();
+    const locks = await getActiveLocksCount();
 
-    const available = totalCapacity - dbTicketsCount - activeRedisLocksCount;
+    const availableAdults = adultCapacity - dbAdultTicketsCount - locks.activeAdults;
+    const availableKids = kidsCapacity - dbKidsTicketsCount - locks.activeKids;
 
     return {
-      success: available >= totalRequested,
-      available,
+      success: availableAdults >= requestedAdults && availableKids >= requestedKids,
+      available: availableAdults + availableKids,
     };
   } catch (error) {
     console.error('Error checking capacity:', error);
