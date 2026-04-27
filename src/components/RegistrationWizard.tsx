@@ -370,15 +370,20 @@ export default function RegistrationWizard() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Account Number</span>
-                <span className="font-medium tracking-widest text-poster-accent-bright">1234567890</span>
+                <span className="font-medium tracking-widest text-poster-accent-bright">551016737305</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Payment Reference</span>
-                <span className="font-medium tracking-widest text-poster-accent-bright">CCCBILREVIVAL</span>
+                <span className="font-medium tracking-widest text-poster-accent-bright">BIL CONF</span>
               </div>
             </div>
 
             <form onSubmit={onUploadReceipt} className="space-y-6">
+              <div className="bg-poster-accent/10 border border-poster-accent/20 rounded-lg p-4 text-sm text-slate-300">
+                <strong className="text-poster-accent-bright block mb-1">Upload Guide:</strong> 
+                Please take a screenshot or save the PDF receipt of your successful transfer. Ensure the <strong className="text-white">amount, date, and reference</strong> are clearly visible to help our team verify your payment quickly.
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-slate-400 mb-2">Upload Payment Receipt</label>
                 <input 
