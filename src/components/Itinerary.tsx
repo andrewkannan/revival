@@ -6,14 +6,14 @@ import { motion } from 'framer-motion';
 const schedule = [
   {
     day: 'Day 1',
-    date: 'Friday • 26/6/2026',
+    date: 'Friday • 26 June 2026',
     events: [
       { time: '7:30pm - 10pm', title: 'Session 1 - Night Rally', description: '' }
     ]
   },
   {
     day: 'Day 2',
-    date: 'Saturday • 27/6/2026',
+    date: 'Saturday • 27 June 2026',
     events: [
       { time: '9am - 12pm', title: 'Session 2', description: '' },
       { time: '1:30pm - 3pm', title: 'Breakout Sessions', description: 'Auditorium 2: Revival in Marketplace\nAuditorium 3: Hosting the Glory' },
@@ -22,7 +22,7 @@ const schedule = [
   },
   {
     day: 'Day 3',
-    date: 'Sunday • 28/6/2026',
+    date: 'Sunday • 28 June 2026',
     events: [
       { time: '9am - 12pm', title: 'Session 4', description: '' }
     ]
