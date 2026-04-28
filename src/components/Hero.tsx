@@ -139,6 +139,7 @@ export default function Hero() {
     render.mouse = mouse;
 
     // Prevent Matter.js from hijacking page scroll
+    mouse.element.removeEventListener('wheel', (mouse as any).mousewheel);
     mouse.element.removeEventListener("mousewheel", (mouse as any).mousewheel);
     mouse.element.removeEventListener("DOMMouseScroll", (mouse as any).mousewheel);
     mouse.element.removeEventListener('touchmove', (mouse as any).mousemove);
