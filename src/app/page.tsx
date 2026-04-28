@@ -1,10 +1,13 @@
 import Hero from '@/components/Hero';
 import RegistrationWizard from '@/components/RegistrationWizard';
+import Itinerary from '@/components/Itinerary';
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#263336] to-black">
       <Hero />
+      
+      <Itinerary />
       
       <section className="py-24 px-6 md:px-12 max-w-7xl mx-auto text-white">
         <div className="grid md:grid-cols-2 gap-16">
