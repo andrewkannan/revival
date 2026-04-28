@@ -5,23 +5,23 @@ import { motion } from 'framer-motion';
 
 const schedule = [
   {
-    day: 'Friday',
+    day: 'Day 1 (Friday - 26/6/2026)',
     events: [
-      { time: '7:30 PM', title: 'Night Session', description: 'Opening night of REVIVAL. Experience powerful worship and an impactful word.' }
+      { time: '7:30pm - 10pm', title: 'Session 1 - Night Rally', description: '' }
     ]
   },
   {
-    day: 'Saturday',
+    day: 'Day 2 (Saturday - 27/6/2026)',
     events: [
-      { time: '9:00 AM', title: 'Morning Session', description: 'Start the day with deep teaching and impartation.' },
-      { time: '1:00 PM', title: 'Afternoon Breakroom', description: 'Connect with others, grab some coffee, and reflect on the morning sessions.' },
-      { time: '7:30 PM', title: 'Night Session', description: 'Our main evening gathering with dynamic worship and special guest speakers.' }
+      { time: '9am - 12pm', title: 'Session 2', description: '' },
+      { time: '1:30pm - 3pm', title: 'Breakout Sessions', description: 'Auditorium 2: Revival in Marketplace\nAuditorium 3: Hosting the Glory' },
+      { time: '7:00pm - 10pm', title: 'Session 3 - Night Rally', description: '' }
     ]
   },
   {
-    day: 'Sunday',
+    day: 'Day 3 (Sunday - 28/6/2026)',
     events: [
-      { time: '9:00 AM', title: 'Morning Session', description: 'Concluding session of REVIVAL. Send off and commissioning.' }
+      { time: '9am - 12pm', title: 'Session 4', description: '' }
     ]
   }
 ];
@@ -91,7 +91,7 @@ export default function Itinerary() {
                     {/* Hover glare effect */}
                     <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.05] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
-                    <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4 relative z-10">
+                    <div className="flex flex-col md:flex-row md:items-center gap-4 relative z-10">
                       <div className="inline-flex px-4 py-1.5 rounded-full bg-poster-accent/10 border border-poster-accent/20 text-poster-accent-bright text-xs font-bold tracking-widest uppercase">
                         {event.time}
                       </div>
@@ -100,9 +100,11 @@ export default function Itinerary() {
                       </h4>
                     </div>
                     
-                    <p className="text-slate-400 font-light leading-relaxed relative z-10">
-                      {event.description}
-                    </p>
+                    {event.description && (
+                      <p className="text-slate-400 font-light leading-relaxed relative z-10 whitespace-pre-line mt-4">
+                        {event.description}
+                      </p>
+                    )}
                   </motion.div>
                 ))}
               </div>
