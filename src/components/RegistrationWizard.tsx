@@ -366,7 +366,7 @@ export default function RegistrationWizard() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Account Name</span>
-                <span className="font-medium">REVIVAL MINISTRIES</span>
+                <span className="font-medium">CALVARY COMMUNITY TT</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Account Number</span>
