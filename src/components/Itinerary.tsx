@@ -5,13 +5,15 @@ import { motion } from 'framer-motion';
 
 const schedule = [
   {
-    day: 'Day 1 (Friday - 26/6/2026)',
+    day: 'Day 1',
+    date: 'Friday • 26/6/2026',
     events: [
       { time: '7:30pm - 10pm', title: 'Session 1 - Night Rally', description: '' }
     ]
   },
   {
-    day: 'Day 2 (Saturday - 27/6/2026)',
+    day: 'Day 2',
+    date: 'Saturday • 27/6/2026',
     events: [
       { time: '9am - 12pm', title: 'Session 2', description: '' },
       { time: '1:30pm - 3pm', title: 'Breakout Sessions', description: 'Auditorium 2: Revival in Marketplace\nAuditorium 3: Hosting the Glory' },
@@ -19,7 +21,8 @@ const schedule = [
     ]
   },
   {
-    day: 'Day 3 (Sunday - 28/6/2026)',
+    day: 'Day 3',
+    date: 'Sunday • 28/6/2026',
     events: [
       { time: '9am - 12pm', title: 'Session 4', description: '' }
     ]
@@ -69,14 +72,19 @@ export default function Itinerary() {
                 <div className="absolute inset-0 bg-poster-accent-bright rounded-full animate-ping opacity-40" />
               </motion.div>
               
-              <motion.h3 
+              <motion.div 
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: "-100px" }}
-                className="pl-10 md:pl-16 text-3xl font-bold tracking-widest uppercase text-white/90 mb-10"
+                className="pl-10 md:pl-16 mb-10 flex flex-col md:flex-row md:items-end gap-2 md:gap-4"
               >
-                {dayPlan.day}
-              </motion.h3>
+                <h3 className="text-3xl md:text-4xl font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-poster-accent-bright to-white uppercase">
+                  {dayPlan.day}
+                </h3>
+                <span className="text-sm md:text-base font-semibold tracking-widest text-slate-400 uppercase md:pb-1">
+                  {dayPlan.date}
+                </span>
+              </motion.div>
 
               <div className="space-y-8 pl-10 md:pl-16">
                 {dayPlan.events.map((event, eventIndex) => (
