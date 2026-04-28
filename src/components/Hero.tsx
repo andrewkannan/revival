@@ -19,7 +19,7 @@ export default function Hero() {
       {/* LAYER 1 - Background */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/hero/LAYER 1.png"
+          src="/hero/layer-1.png"
           alt="Revival Background"
           fill
           priority
@@ -30,7 +30,7 @@ export default function Hero() {
       {/* LAYER 2 - Midground/Subject */}
       <div className="absolute inset-0 z-10 pointer-events-none">
         <Image
-          src="/hero/LAYER 2.png"
+          src="/hero/layer-2.png"
           alt="Revival Subject"
           fill
           priority
@@ -51,7 +51,7 @@ export default function Hero() {
               className="absolute inset-0"
             >
               <Image
-                src="/hero/LAYER 3.png"
+                src="/hero/layer-3.png"
                 alt="Event Details 1"
                 fill
                 priority
@@ -69,7 +69,7 @@ export default function Hero() {
               className="absolute inset-0"
             >
               <Image
-                src="/hero/LAYER 4.png"
+                src="/hero/layer-4.png"
                 alt="Event Details 2"
                 fill
                 priority
