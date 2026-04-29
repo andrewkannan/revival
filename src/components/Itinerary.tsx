@@ -31,7 +31,7 @@ const schedule = [
 
 export default function Itinerary() {
   return (
-    <section className="py-32 px-6 md:px-12 max-w-4xl mx-auto text-white relative">
+    <section id="itinerary" className="py-32 px-6 md:px-12 max-w-4xl mx-auto text-white relative scroll-mt-20">
       {/* Background glow effect */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-poster-accent/5 rounded-full blur-[120px] pointer-events-none" />
 

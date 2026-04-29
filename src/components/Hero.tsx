@@ -51,7 +51,7 @@ export default function Hero() {
               className="absolute inset-0"
             >
               <Image
-                src="/hero/layer-3.png"
+                src="/hero/layer-3-v2.png"
                 alt="Event Details 1"
                 fill
                 priority
@@ -69,7 +69,7 @@ export default function Hero() {
               className="absolute inset-0"
             >
               <Image
-                src="/hero/layer-4.png"
+                src="/hero/layer-4-v2.png"
                 alt="Event Details 2"
                 fill
                 priority
@@ -80,23 +80,24 @@ export default function Hero() {
         </AnimatePresence>
       </div>
 
+      {/* Gradient Blend to Page Background */}
+      <div className="absolute bottom-0 left-0 right-0 h-48 md:h-64 bg-gradient-to-t from-[#263336] to-transparent z-20 pointer-events-none" />
+
       {/* Hero Overlay Button */}
-      <div className="absolute inset-0 z-30 pointer-events-none flex flex-col justify-end p-6 md:p-12 pb-24 max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-end justify-center w-full">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              className="pointer-events-auto"
-            >
-              <button 
-                onClick={() => document.getElementById('registration')?.scrollIntoView({ behavior: 'smooth' })}
-                className="bg-poster-accent hover:bg-poster-accent-bright text-poster-bg px-12 py-5 rounded-sm font-bold uppercase tracking-[0.15em] hover:-translate-y-1 transition-all duration-300 shadow-[0_0_30px_rgba(140,174,176,0.3)] hover:shadow-[0_0_40px_rgba(164,197,198,0.5)]"
-              >
-                Register Now
-              </button>
-            </motion.div>
-        </div>
+      <div className="absolute inset-0 z-30 pointer-events-none">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute bottom-[22%] md:bottom-[18%] left-1/2 -translate-x-1/2 pointer-events-auto"
+        >
+          <button 
+            onClick={() => document.getElementById('itinerary')?.scrollIntoView({ behavior: 'smooth' })}
+            className="bg-poster-accent hover:bg-poster-accent-bright text-poster-bg px-8 py-3 md:px-10 md:py-4 rounded-sm font-bold uppercase tracking-[0.15em] text-sm md:text-base hover:-translate-y-1 transition-all duration-300 shadow-[0_0_30px_rgba(140,174,176,0.3)] hover:shadow-[0_0_40px_rgba(164,197,198,0.5)] whitespace-nowrap"
+          >
+            Discover More
+          </button>
+        </motion.div>
       </div>
     </div>
   );
