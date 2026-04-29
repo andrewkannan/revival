@@ -22,9 +22,12 @@ export default function Hero() {
          initial={{ opacity: 0, y: 20 }} 
          animate={{ opacity: 1, y: 0 }} 
          transition={{ duration: 0.8 }}
-         className="text-center z-20 mt-4 md:mt-8 max-w-3xl px-2"
+         className="text-center z-20 mt-4 md:mt-8 max-w-3xl px-2 w-full flex flex-col items-center"
       >
-        <h2 className="text-3xl md:text-5xl lg:text-6xl font-black mb-4 md:mb-6 tracking-[0.1em] text-poster-accent-bright uppercase drop-shadow-lg leading-tight">
+        <div className="relative w-full max-w-[280px] md:max-w-[400px] aspect-[5/1] mb-6 md:mb-8">
+          <Image src="/hero/revival-logo.png" alt="Revival Logo" fill className="object-contain drop-shadow-xl" priority />
+        </div>
+        <h2 className="text-xl md:text-3xl lg:text-4xl font-black mb-4 md:mb-6 tracking-[0.1em] text-poster-accent-bright uppercase drop-shadow-lg leading-tight">
           "I Will Pour Out<br/>My Spirit"
         </h2>
         <p className="text-base md:text-xl font-light text-slate-200 italic mb-4 drop-shadow">
