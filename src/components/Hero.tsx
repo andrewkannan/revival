@@ -27,15 +27,21 @@ export default function Hero() {
         <div className="relative w-full max-w-[280px] md:max-w-[400px] aspect-[5/1] mb-6 md:mb-8">
           <Image src="/hero/revival-logo.png" alt="Revival Logo" fill className="object-contain drop-shadow-xl" priority />
         </div>
-        <h2 className="text-xl md:text-3xl lg:text-4xl font-black mb-4 md:mb-6 tracking-[0.1em] text-poster-accent-bright uppercase drop-shadow-lg leading-tight">
+        <h2 className="text-2xl md:text-4xl lg:text-5xl font-extrabold mb-4 md:mb-6 tracking-widest text-white uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] leading-tight">
           "I Will Pour Out<br/>My Spirit"
         </h2>
-        <p className="text-base md:text-xl font-light text-slate-200 italic mb-4 drop-shadow">
+        
+        <p className="text-lg md:text-xl font-light text-slate-200 italic mb-6 md:mb-8 drop-shadow-md tracking-wide">
           An Outpouring. An Awakening. A Generation Arising.
         </p>
-        <p className="text-sm md:text-base font-bold tracking-[0.3em] text-poster-accent uppercase drop-shadow">
-          Acts 2:17-18
-        </p>
+        
+        <div className="inline-flex items-center gap-4">
+          <div className="h-[1px] w-8 md:w-12 bg-poster-accent-bright/40"></div>
+          <p className="text-sm md:text-base font-bold tracking-[0.5em] text-poster-accent-bright uppercase drop-shadow-md">
+            Acts 2:17-18
+          </p>
+          <div className="h-[1px] w-8 md:w-12 bg-poster-accent-bright/40"></div>
+        </div>
       </motion.div>
 
       {/* POSTER CONTAINER */}
