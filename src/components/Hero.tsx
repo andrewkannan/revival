@@ -77,20 +77,20 @@ export default function Hero() {
           </AnimatePresence>
         </div>
 
-        {/* Hero Overlay Button */}
-        <div className="absolute inset-0 z-30 pointer-events-none">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute bottom-[6.5%] md:bottom-[7%] left-1/2 -translate-x-1/2 pointer-events-auto"
-          >
-            <button 
-              onClick={() => document.getElementById('itinerary')?.scrollIntoView({ behavior: 'smooth' })}
-              className="bg-poster-accent hover:bg-poster-accent-bright text-poster-bg px-6 py-2 md:px-8 md:py-2.5 rounded-sm font-bold uppercase tracking-[0.15em] text-xs md:text-sm hover:-translate-y-0.5 transition-all duration-300 shadow-[0_0_15px_rgba(140,174,176,0.3)] hover:shadow-[0_0_25px_rgba(164,197,198,0.5)] whitespace-nowrap"
-            >
-              Discover More
-            </button>
-          </motion.div>
-        </div>
+
+      </motion.div>
+
+      {/* CALL TO ACTION BUTTON */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.4 }}
+        className="z-20 mt-2 mb-4 md:mb-8"
+      >
+        <button 
+          onClick={() => document.getElementById('registration')?.scrollIntoView({ behavior: 'smooth' })}
+          className="bg-poster-accent hover:bg-poster-accent-bright text-poster-bg px-8 py-3 md:px-12 md:py-5 rounded-md font-black uppercase tracking-[0.15em] md:tracking-[0.2em] text-sm md:text-base hover:-translate-y-1 transition-all duration-300 shadow-[0_0_30px_rgba(140,174,176,0.4)] hover:shadow-[0_0_40px_rgba(164,197,198,0.6)] whitespace-nowrap"
+        >
+          Get Your Tickets Now!
+        </button>
       </motion.div>
 
       {/* PANEL 2 - BOTTOM */}
