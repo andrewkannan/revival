@@ -178,20 +178,7 @@ export async function finalizeRegistration(data: RegistrationData, sessionId: st
     // Release Redis lock
     await releaseTicketLock(sessionId);
 
-    // Send Invoice Email
-    try {
-      const template = await getEmailTemplate('INVOICE');
-      const parsedHtml = parseTemplate(template.bodyHtml, {
-        name: data.name,
-        orderNumber: result.orderNumber.toString(),
-        totalAmount: result.totalAmount.toString()
-      });
-      
-      // Fire and forget: send email asynchronously without blocking the request
-      sendEmail(data.email, template.subject, parsedHtml).catch(e => console.error("Async email error:", e));
-    } catch (emailError) {
-      console.error('Error with invoice email logic:', emailError);
-    }
+    // No longer sending invoice here. Wait for receipt upload.
 
     return { success: true, registrationId: result.id };
   } catch (error) {
@@ -209,13 +196,28 @@ export async function uploadReceipt(registrationId: string, formData: FormData) 
       return { success: false, message: 'No receipt uploaded.' };
     }
 
-    await prisma.registration.update({
+    const registration = await prisma.registration.update({
       where: { id: registrationId },
       data: {
         receiptUrl: base64String,
         status: 'PENDING_FOR_REVIEW',
-      }
+      },
+      include: { attendee: true }
     });
+
+    // Send Invoice/Receipt Email after they upload proof
+    try {
+      const template = await getEmailTemplate('INVOICE');
+      const parsedHtml = parseTemplate(template.bodyHtml, {
+        name: registration.attendee.name,
+        orderNumber: registration.orderNumber.toString(),
+        totalAmount: registration.totalAmount.toString()
+      });
+      
+      sendEmail(registration.attendee.email, template.subject, parsedHtml).catch(e => console.error("Async email error:", e));
+    } catch (emailError) {
+      console.error('Error with invoice email logic:', emailError);
+    }
 
     return { success: true };
   } catch (error) {
