@@ -1,5 +1,10 @@
 import nodemailer from 'nodemailer';
 import prisma from './prisma';
+import dns from 'dns';
+
+// Force Node.js to resolve IPv4 addresses first globally.
+// This prevents ENETUNREACH errors on Railway when trying to route Google SMTP via IPv6.
+dns.setDefaultResultOrder('ipv4first');
 
 export async function getTransporter() {
   const settings = await prisma.emailSettings.findFirst();
@@ -16,12 +21,11 @@ export async function getTransporter() {
     connectionTimeout: 20000,
     greetingTimeout: 20000,
     socketTimeout: 20000,
-    family: 4, // Force IPv4 to prevent ENETUNREACH issues with Google SMTP IPv6
     auth: {
       user,
       pass,
     },
-  } as any);
+  });
 }
 
 export async function sendEmail(to: string, subject: string, html: string, attachments?: any[]) {
