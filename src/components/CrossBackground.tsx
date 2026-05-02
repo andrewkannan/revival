@@ -10,7 +10,7 @@ export default function CrossBackground() {
       
       {/* SVG Silhouette */}
       <svg 
-        className="w-full h-auto min-w-[1200px] opacity-[0.15] mix-blend-plus-lighter" 
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-auto min-w-[1200px] opacity-[0.15] mix-blend-plus-lighter" 
         viewBox="0 0 1440 600" 
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
