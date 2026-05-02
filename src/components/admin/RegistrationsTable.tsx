@@ -2,8 +2,9 @@
 
 import React, { useState, useMemo } from 'react';
 import { RegistrationStatus, Registration, Attendee, OutreachLocation, Ticket } from '@prisma/client';
-import { BadgeCheck, Clock, XCircle, AlertCircle, Search, X, Edit2, Download, FileArchive, QrCode } from 'lucide-react';
+import { BadgeCheck, Clock, XCircle, AlertCircle, Search, X, Edit2, Download, FileArchive, QrCode, Trash2 } from 'lucide-react';
 import JSZip from 'jszip';
+import { deleteRegistration } from '@/actions/admin';
 import StatusSelect from '@/components/admin/StatusSelect';
 import EditRegistrationModal, { EditData } from '@/components/admin/EditRegistrationModal';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,6 +28,15 @@ export default function RegistrationsTable({ initialData }: Props) {
   const [ticketsModal, setTicketsModal] = useState<{ reg: RegistrationWithAttendee } | null>(null);
   const [editingData, setEditingData] = useState<EditData | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to permanently delete this registration?')) {
+      setIsDeleting(id);
+      await deleteRegistration(id);
+      setIsDeleting(null);
+    }
+  };
 
   const exportCSV = () => {
     const headers = ['Queue No', 'Name', 'Email', 'Phone', 'Location', 'Adult Tickets', 'Total Amount', 'Status', 'Date'];
@@ -288,23 +298,32 @@ export default function RegistrationsTable({ initialData }: Props) {
                           </button>
                         )}
                         <StatusSelect registrationId={reg.id} currentStatus={reg.status} />
-                        <button 
-                          onClick={() => setEditingData({
-                            id: reg.id,
-                            attendeeId: reg.attendee.id,
-                            name: reg.attendee.name,
-                            email: reg.attendee.email,
-                            phone: reg.attendee.phone,
-                            outreach: reg.attendee.outreach,
-                            totalAmount: reg.totalAmount,
-                            status: reg.status,
-                            receiptUrl: reg.receiptUrl,
-                            orderNumber: reg.orderNumber
-                          })}
-                          className="flex items-center gap-1.5 px-2 py-1 text-xs text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 rounded transition-colors border border-white/10"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" /> Edit
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => setEditingData({
+                              id: reg.id,
+                              attendeeId: reg.attendee.id,
+                              name: reg.attendee.name,
+                              email: reg.attendee.email,
+                              phone: reg.attendee.phone,
+                              outreach: reg.attendee.outreach,
+                              totalAmount: reg.totalAmount,
+                              status: reg.status,
+                              receiptUrl: reg.receiptUrl,
+                              orderNumber: reg.orderNumber
+                            })}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 rounded transition-colors border border-white/10"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" /> Edit
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(reg.id)}
+                            disabled={isDeleting === reg.id}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/80 rounded transition-colors border border-red-500/20 disabled:opacity-50"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> {isDeleting === reg.id ? '...' : 'Del'}
+                          </button>
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -361,23 +380,32 @@ export default function RegistrationsTable({ initialData }: Props) {
                     ) : (
                       <span className="text-slate-500 text-xs px-3 py-1.5">No Receipt</span>
                     )}
-                    <button 
-                      onClick={() => setEditingData({
-                        id: reg.id,
-                        attendeeId: reg.attendee.id,
-                        name: reg.attendee.name,
-                        email: reg.attendee.email,
-                        phone: reg.attendee.phone,
-                        outreach: reg.attendee.outreach,
-                        totalAmount: reg.totalAmount,
-                        status: reg.status,
-                        receiptUrl: reg.receiptUrl,
-                        orderNumber: reg.orderNumber
-                      })}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 rounded transition-colors border border-white/10"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" /> Edit
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => setEditingData({
+                          id: reg.id,
+                          attendeeId: reg.attendee.id,
+                          name: reg.attendee.name,
+                          email: reg.attendee.email,
+                          phone: reg.attendee.phone,
+                          outreach: reg.attendee.outreach,
+                          totalAmount: reg.totalAmount,
+                          status: reg.status,
+                          receiptUrl: reg.receiptUrl,
+                          orderNumber: reg.orderNumber
+                        })}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 rounded transition-colors border border-white/10"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" /> Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(reg.id)}
+                        disabled={isDeleting === reg.id}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/80 rounded transition-colors border border-red-500/20 disabled:opacity-50"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> {isDeleting === reg.id ? '...' : 'Del'}
+                      </button>
+                    </div>
                   </div>
                 </div>
 

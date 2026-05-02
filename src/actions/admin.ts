@@ -226,6 +226,20 @@ export async function updateRegistrationDetails(
   }
 }
 
+export async function deleteRegistration(id: string) {
+  try {
+    // Delete tickets first due to foreign key constraints, though Cascade should handle it
+    await prisma.ticket.deleteMany({ where: { registrationId: id } });
+    await prisma.registration.delete({ where: { id } });
+    
+    revalidatePath('/admin/registrations');
+    return { success: true };
+  } catch (e) {
+    console.error("Failed to delete registration", e);
+    return { success: false, message: "Failed to delete registration." };
+  }
+}
+
 export async function getDashboardStats() {
   const config = await getAdminConfig();
   
