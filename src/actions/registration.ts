@@ -187,9 +187,10 @@ export async function finalizeRegistration(data: RegistrationData, sessionId: st
         totalAmount: result.totalAmount.toString()
       });
       
-      await sendEmail(data.email, template.subject, parsedHtml);
+      // Fire and forget: send email asynchronously without blocking the request
+      sendEmail(data.email, template.subject, parsedHtml).catch(e => console.error("Async email error:", e));
     } catch (emailError) {
-      console.error('Error sending invoice email:', emailError);
+      console.error('Error with invoice email logic:', emailError);
     }
 
     return { success: true, registrationId: result.id };

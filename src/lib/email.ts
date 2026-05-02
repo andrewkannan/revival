@@ -44,9 +44,38 @@ export async function sendEmail(to: string, subject: string, html: string, attac
       html,
       attachments,
     });
+    
+    // Log success
+    try {
+      await prisma.emailLog.create({
+        data: {
+          to,
+          subject,
+          status: 'SENT'
+        }
+      });
+    } catch (dbError) {
+      console.error("Failed to log email success to DB:", dbError);
+    }
+    
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to send email:", error);
+    
+    // Log failure
+    try {
+      await prisma.emailLog.create({
+        data: {
+          to,
+          subject,
+          status: 'FAILED',
+          error: error?.message || 'Unknown error'
+        }
+      });
+    } catch (dbError) {
+      console.error("Failed to log email failure to DB:", dbError);
+    }
+    
     return false;
   }
 }

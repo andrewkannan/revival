@@ -108,7 +108,8 @@ export async function updateRegistrationStatus(id: string, status: RegistrationS
     });
     
     if (status === 'PAYMENT_REJECTED') {
-      await sendPaymentRejectedEmail(registration.attendee.email, registration.attendee.name);
+      // Fire and forget email
+      sendPaymentRejectedEmail(registration.attendee.email, registration.attendee.name).catch(e => console.error("Async email error:", e));
     } else if (status === 'SEAT_SECURED') {
       // Generate QR codes for tickets
       const updatedTickets = [];
@@ -146,7 +147,8 @@ export async function updateRegistrationStatus(id: string, status: RegistrationS
         finalHtml += `<br/><br/><div><strong>Your Tickets:</strong><br/>${qrImages}</div>`;
       }
 
-      await sendEmail(registration.attendee.email, template.subject, finalHtml, attachments);
+      // Fire and forget: send email asynchronously
+      sendEmail(registration.attendee.email, template.subject, finalHtml, attachments).catch(e => console.error("Async email error:", e));
     }
     
     revalidatePath('/admin/registrations');
@@ -198,7 +200,8 @@ export async function updateRegistrationDetails(
     });
 
     if (data.status === 'PAYMENT_REJECTED' && oldReg?.status !== 'PAYMENT_REJECTED') {
-      await sendPaymentRejectedEmail(data.email, data.name);
+      // Fire and forget email
+      sendPaymentRejectedEmail(data.email, data.name).catch(e => console.error("Async email error:", e));
     } else if (data.status === 'SEAT_SECURED' && oldReg?.status !== 'SEAT_SECURED') {
        // Also trigger E-ticket generation here
        await updateRegistrationStatus(id, 'SEAT_SECURED');
@@ -405,3 +408,15 @@ export async function sendConferenceReminders() {
   }
 }
 
+export async function getEmailLogs() {
+  try {
+    const logs = await prisma.emailLog.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 100 // Limit to recent 100 for dashboard performance
+    });
+    return { success: true, logs };
+  } catch (e) {
+    console.error("Failed to fetch email logs", e);
+    return { success: false, logs: [] };
+  }
+}

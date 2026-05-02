@@ -119,3 +119,17 @@ model EmailTemplate {
   bodyHtml  String
   updatedAt DateTime     @updatedAt
 }
+
+// ------------------------------------------------------
+// Logging
+// ------------------------------------------------------
+
+model EmailLog {
+  id        String   @id @default(uuid())
+  to        String
+  subject   String
+  status    String   // "SENT" or "FAILED"
+  error     String?  // Stack trace or error message
+  createdAt DateTime @default(now())
+}
+
