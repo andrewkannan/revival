@@ -27,7 +27,7 @@ export default function RegistrationsTable({ initialData }: Props) {
   const [isExporting, setIsExporting] = useState(false);
 
   const exportCSV = () => {
-    const headers = ['Queue No', 'Name', 'Email', 'Phone', 'Location', 'Adult Tickets', 'Kids Tickets', 'Total Amount', 'Status', 'Date'];
+    const headers = ['Queue No', 'Name', 'Email', 'Phone', 'Location', 'Adult Tickets', 'Total Amount', 'Status', 'Date'];
     const rows = filteredAndSorted.map(reg => [
       formatQueue(reg.orderNumber),
       `"${reg.attendee.name.replace(/"/g, '""')}"`,
@@ -35,7 +35,6 @@ export default function RegistrationsTable({ initialData }: Props) {
       reg.attendee.phone,
       reg.attendee.outreach,
       reg.adultTickets,
-      reg.kidsTickets,
       reg.totalAmount,
       reg.status,
       new Date(reg.createdAt).toLocaleDateString()
@@ -258,7 +257,7 @@ export default function RegistrationsTable({ initialData }: Props) {
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="font-medium text-white mb-0.5">RM {reg.totalAmount}</div>
                       <div className="text-slate-400 text-xs">
-                        {reg.adultTickets} Adult {reg.kidsTickets > 0 && <span>&bull; {reg.kidsTickets} Kids</span>}
+                        {reg.adultTickets} Tickets
                       </div>
                       <div className="text-slate-400 text-xs mt-0.5">
                         {reg.attendee.outreach.replace('_', ' ')}
@@ -376,7 +375,7 @@ export default function RegistrationsTable({ initialData }: Props) {
                   <div>
                     <div className="font-medium text-white mb-0.5">RM {reg.totalAmount}</div>
                     <div className="text-slate-400 text-xs">
-                      {reg.adultTickets} Adult {reg.kidsTickets > 0 && <span>&bull; {reg.kidsTickets} Kids</span>}
+                      {reg.adultTickets} Tickets
                     </div>
                     <div className="text-slate-400 text-xs mt-0.5">
                       {reg.attendee.outreach.replace('_', ' ')}

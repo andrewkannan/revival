@@ -1,5 +1,6 @@
 import { getDashboardStats } from '@/actions/admin';
 import { getActiveLocksCount } from '@/lib/ticket-lock';
+import ReminderButton from '@/components/ReminderButton';
 
 export const dynamic = 'force-dynamic';
 import { Users, Ticket, Clock, CheckCircle2, AlertCircle, Banknote } from 'lucide-react';
@@ -12,18 +13,19 @@ export default async function AdminDashboard() {
   const availableAdultSeats = Math.max(0, stats.adultCapacity - totalAdultsTaken);
   const fillAdultPercentage = Math.min(100, Math.round((totalAdultsTaken / stats.adultCapacity) * 100)) || 0;
 
-  const totalKidsTaken = stats.securedKids + stats.pendingKids + locks.activeKids;
-  const availableKidsSeats = Math.max(0, stats.kidsCapacity - totalKidsTaken);
-  const fillKidsPercentage = Math.min(100, Math.round((totalKidsTaken / stats.kidsCapacity) * 100)) || 0;
+
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
-        <p className="text-slate-400 mt-2">Real-time capacity and registration statistics.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
+          <p className="text-slate-400 mt-2">Real-time capacity and registration statistics.</p>
+        </div>
+        <ReminderButton />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         {/* Adult Capacity Card */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
@@ -50,31 +52,7 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
-        {/* Kids Capacity Card */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-            <Ticket className="w-48 h-48" />
-          </div>
-          <div className="relative z-10">
-            <h2 className="text-lg font-medium text-slate-400 mb-2">Kids Capacity Remaining</h2>
-            <div className="flex items-baseline gap-4">
-              <span className="text-5xl font-bold tracking-tighter">{availableKidsSeats}</span>
-              <span className="text-lg text-slate-500 font-medium">/ {stats.kidsCapacity} seats</span>
-            </div>
-            <div className="mt-8">
-              <div className="flex justify-between text-sm font-medium mb-2">
-                <span className="text-slate-400">Filled ({fillKidsPercentage}%)</span>
-                <span className="text-white">{totalKidsTaken} taken</span>
-              </div>
-              <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
-                <div 
-                  className="bg-emerald-400 h-full rounded-full transition-all duration-1000 ease-out"
-                  style={{ width: `${fillKidsPercentage}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+
       </div>
 
       {/* Stats Grid */}
@@ -119,16 +97,8 @@ export default async function AdminDashboard() {
             </div>
             <h3 className="font-medium text-slate-400">Secured</h3>
           </div>
-          <div className="flex gap-4">
-            <div>
-              <p className="text-2xl font-bold text-poster-accent">{stats.securedAdults}</p>
-              <p className="text-xs text-slate-500 mt-1">Adults</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-emerald-400">{stats.securedKids}</p>
-              <p className="text-xs text-slate-500 mt-1">Kids</p>
-            </div>
-          </div>
+          <p className="text-3xl font-bold text-poster-accent">{stats.securedAdults}</p>
+          <p className="text-sm text-slate-500 mt-1">Tickets</p>
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
@@ -138,16 +108,8 @@ export default async function AdminDashboard() {
             </div>
             <h3 className="font-medium text-slate-400">Pending</h3>
           </div>
-          <div className="flex gap-4">
-            <div>
-              <p className="text-2xl font-bold text-amber-400">{stats.pendingAdults}</p>
-              <p className="text-xs text-slate-500 mt-1">Adults</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-amber-300">{stats.pendingKids}</p>
-              <p className="text-xs text-slate-500 mt-1">Kids</p>
-            </div>
-          </div>
+          <p className="text-3xl font-bold text-amber-400">{stats.pendingAdults}</p>
+          <p className="text-sm text-slate-500 mt-1">Tickets</p>
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
@@ -157,16 +119,8 @@ export default async function AdminDashboard() {
             </div>
             <h3 className="font-medium text-slate-400">Active Locks</h3>
           </div>
-          <div className="flex gap-4">
-            <div>
-              <p className="text-2xl font-bold text-purple-400">{locks.activeAdults}</p>
-              <p className="text-xs text-slate-500 mt-1">Adults</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-purple-300">{locks.activeKids}</p>
-              <p className="text-xs text-slate-500 mt-1">Kids</p>
-            </div>
-          </div>
+          <p className="text-3xl font-bold text-purple-400">{locks.activeAdults}</p>
+          <p className="text-sm text-slate-500 mt-1">Tickets</p>
         </div>
       </div>
     </div>

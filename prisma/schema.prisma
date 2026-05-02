@@ -90,3 +90,32 @@ model AdminConfig {
   earlyBirdEndDate     DateTime?
   updatedAt            DateTime @updatedAt
 }
+
+// ------------------------------------------------------
+// Settings & Templates
+// ------------------------------------------------------
+
+model EmailSettings {
+  id        Int      @id @default(1)
+  host      String   @default("smtp.gmail.com")
+  port      Int      @default(465)
+  username  String?
+  password  String?
+  fromName  String   @default("REVIVAL Team")
+  fromEmail String?
+  updatedAt DateTime @updatedAt
+}
+
+enum TemplateType {
+  INVOICE
+  E_TICKET
+  REMINDER
+}
+
+model EmailTemplate {
+  id        String       @id @default(uuid())
+  type      TemplateType @unique
+  subject   String
+  bodyHtml  String
+  updatedAt DateTime     @updatedAt
+}

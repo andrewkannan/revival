@@ -1,72 +1,153 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAdminConfig, updateAdminConfig } from '@/actions/admin';
-import { Save, Loader2, Info } from 'lucide-react';
+import { getAdminConfig, updateAdminConfig, getEmailSettings, updateEmailSettings, getEmailTemplate, updateEmailTemplate } from '@/actions/admin';
+import { Save, Loader2, Info, Mail, Settings as SettingsIcon, LayoutTemplate } from 'lucide-react';
+import { TemplateType } from '@prisma/client';
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
+  const [activeTab, setActiveTab] = useState<'general' | 'smtp' | 'templates'>('general');
+  const [activeTemplate, setActiveTemplate] = useState<TemplateType>('INVOICE');
   
-  const [formData, setFormData] = useState({
+  const [generalData, setGeneralData] = useState({
     adultCapacity: 300,
-    kidsCapacity: 100,
     isEarlyBird: true,
     earlyBirdEndDate: '',
     adultPriceEarlyBird: 50,
-    kidsPriceEarlyBird: 25,
     adultPriceRegular: 80,
-    kidsPriceRegular: 40,
   });
 
+  const [smtpData, setSmtpData] = useState({
+    host: '',
+    port: 465,
+    username: '',
+    password: '',
+    fromName: '',
+    fromEmail: '',
+  });
+
+  const [templates, setTemplates] = useState<Record<string, { subject: string; bodyHtml: string }>>({});
+
   useEffect(() => {
-    getAdminConfig().then((config) => {
-      setFormData({
+    Promise.all([
+      getAdminConfig(),
+      getEmailSettings(),
+      getEmailTemplate('INVOICE'),
+      getEmailTemplate('E_TICKET'),
+      getEmailTemplate('REMINDER')
+    ]).then(([config, smtp, invoice, eTicket, reminder]) => {
+      setGeneralData({
         adultCapacity: config.adultCapacity,
-        kidsCapacity: config.kidsCapacity,
         isEarlyBird: config.isEarlyBird,
         earlyBirdEndDate: config.earlyBirdEndDate ? new Date(config.earlyBirdEndDate).toISOString().split('T')[0] : '',
         adultPriceEarlyBird: Number(config.adultPriceEarlyBird),
-        kidsPriceEarlyBird: Number(config.kidsPriceEarlyBird),
         adultPriceRegular: Number(config.adultPriceRegular),
-        kidsPriceRegular: Number(config.kidsPriceRegular),
       });
+
+      setSmtpData({
+        host: smtp.host,
+        port: smtp.port,
+        username: smtp.username || '',
+        password: smtp.password || '',
+        fromName: smtp.fromName,
+        fromEmail: smtp.fromEmail || '',
+      });
+
+      setTemplates({
+        INVOICE: { subject: invoice.subject, bodyHtml: invoice.bodyHtml },
+        E_TICKET: { subject: eTicket.subject, bodyHtml: eTicket.bodyHtml },
+        REMINDER: { subject: reminder.subject, bodyHtml: reminder.bodyHtml },
+      });
+
       setLoading(false);
     });
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handlers for General Settings
+  const handleGeneralChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
+    setGeneralData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : (type === 'date' ? value : Number(value))
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleGeneralSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setMessage({ text: '', type: '' });
 
     const payload = {
-      ...formData,
-      earlyBirdEndDate: formData.earlyBirdEndDate ? new Date(formData.earlyBirdEndDate) : null,
+      ...generalData,
+      earlyBirdEndDate: generalData.earlyBirdEndDate ? new Date(generalData.earlyBirdEndDate) : null,
     };
 
     const result = await updateAdminConfig(payload);
     
     if (result.success) {
-      setMessage({ text: 'Configuration saved successfully.', type: 'success' });
+      setMessage({ text: 'General configuration saved successfully.', type: 'success' });
     } else {
       setMessage({ text: result.message || 'Failed to save.', type: 'error' });
     }
     setSaving(false);
+    setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+  };
+
+  // Handlers for SMTP Settings
+  const handleSmtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type } = e.target;
+    setSmtpData((prev) => ({
+      ...prev,
+      [name]: type === 'number' ? Number(value) : value
+    }));
+  };
+
+  const handleSmtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setMessage({ text: '', type: '' });
+
+    const result = await updateEmailSettings(smtpData);
     
-    // Clear success message after 3 seconds
     if (result.success) {
-      setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+      setMessage({ text: 'SMTP settings saved successfully.', type: 'success' });
+    } else {
+      setMessage({ text: result.message || 'Failed to save SMTP settings.', type: 'error' });
     }
+    setSaving(false);
+    setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+  };
+
+  // Handlers for Template Settings
+  const handleTemplateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setTemplates(prev => ({
+      ...prev,
+      [activeTemplate]: {
+        ...prev[activeTemplate],
+        [name]: value
+      }
+    }));
+  };
+
+  const handleTemplateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setMessage({ text: '', type: '' });
+
+    const tmpl = templates[activeTemplate];
+    const result = await updateEmailTemplate(activeTemplate, tmpl.subject, tmpl.bodyHtml);
+    
+    if (result.success) {
+      setMessage({ text: 'Email template saved successfully.', type: 'success' });
+    } else {
+      setMessage({ text: result.message || 'Failed to save template.', type: 'error' });
+    }
+    setSaving(false);
+    setTimeout(() => setMessage({ text: '', type: '' }), 3000);
   };
 
   if (loading) {
@@ -78,10 +159,32 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-3xl">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Conference Settings</h1>
-        <p className="text-slate-400 mt-2">Manage capacity limits and ticket pricing.</p>
+        <h1 className="text-3xl font-bold tracking-tight">System Settings</h1>
+        <p className="text-slate-400 mt-2">Manage capacity, pricing, emails, and templates.</p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-white/10 gap-8">
+        <button
+          onClick={() => setActiveTab('general')}
+          className={`pb-4 flex items-center gap-2 font-medium transition-colors border-b-2 ${activeTab === 'general' ? 'border-white text-white' : 'border-transparent text-slate-400 hover:text-white'}`}
+        >
+          <SettingsIcon className="w-4 h-4" /> General
+        </button>
+        <button
+          onClick={() => setActiveTab('smtp')}
+          className={`pb-4 flex items-center gap-2 font-medium transition-colors border-b-2 ${activeTab === 'smtp' ? 'border-white text-white' : 'border-transparent text-slate-400 hover:text-white'}`}
+        >
+          <Mail className="w-4 h-4" /> Email SMTP
+        </button>
+        <button
+          onClick={() => setActiveTab('templates')}
+          className={`pb-4 flex items-center gap-2 font-medium transition-colors border-b-2 ${activeTab === 'templates' ? 'border-white text-white' : 'border-transparent text-slate-400 hover:text-white'}`}
+        >
+          <LayoutTemplate className="w-4 h-4" /> Templates
+        </button>
       </div>
 
       {message.text && (
@@ -91,158 +194,156 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        
-        {/* General Settings */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-xl font-semibold mb-6">General</h2>
-          
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Adult Capacity</label>
-                <input
-                  type="number"
-                  name="adultCapacity"
-                  value={formData.adultCapacity}
-                  onChange={handleChange}
-                  min="0"
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30"
-                />
+      {/* General Settings Tab */}
+      {activeTab === 'general' && (
+        <form onSubmit={handleGeneralSubmit} className="space-y-8">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <h2 className="text-xl font-semibold mb-6">Capacity & Rules</h2>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Adult Capacity</label>
+                  <input type="number" name="adultCapacity" value={generalData.adultCapacity} onChange={handleGeneralChange} min="0" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30" />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Kids Capacity</label>
-                <input
-                  type="number"
-                  name="kidsCapacity"
-                  value={formData.kidsCapacity}
-                  onChange={handleChange}
-                  min="0"
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30"
-                />
+              
+              <div className="flex items-center gap-3 pt-4 border-t border-white/5">
+                <input type="checkbox" id="isEarlyBird" name="isEarlyBird" checked={generalData.isEarlyBird} onChange={handleGeneralChange} className="w-5 h-5 rounded border-white/10 bg-black/50 text-white focus:ring-white/30 focus:ring-offset-black" />
+                <label htmlFor="isEarlyBird" className="text-sm font-medium text-white cursor-pointer">Enable Early Bird Pricing</label>
+              </div>
+              
+              {generalData.isEarlyBird && (
+                <div className="pl-8 pt-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Early Bird Expiration Date (Optional)</label>
+                  <input type="date" name="earlyBirdEndDate" value={generalData.earlyBirdEndDate} onChange={handleGeneralChange} className="w-full max-w-xs bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30" />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <h2 className="text-xl font-semibold mb-6">Pricing Tiers (RM)</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <h3 className="font-medium text-slate-400 border-b border-white/5 pb-2">Early Bird</h3>
+                <div>
+                  <label className="block text-sm text-slate-300 mb-1">Adult Price</label>
+                  <input type="number" name="adultPriceEarlyBird" value={generalData.adultPriceEarlyBird} onChange={handleGeneralChange} min="0" step="0.01" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30" />
+                </div>
+              </div>
+              <div className="space-y-4">
+                <h3 className="font-medium text-slate-400 border-b border-white/5 pb-2">Regular</h3>
+                <div>
+                  <label className="block text-sm text-slate-300 mb-1">Adult Price</label>
+                  <input type="number" name="adultPriceRegular" value={generalData.adultPriceRegular} onChange={handleGeneralChange} min="0" step="0.01" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30" />
+                </div>
               </div>
             </div>
-            <p className="text-xs text-slate-500 mt-2">Maximum number of seats available for booking.</p>
+          </div>
 
-            <div className="flex items-center gap-3 pt-4 border-t border-white/5">
+          <button type="submit" disabled={saving} className="bg-white text-black font-medium px-8 py-3 rounded-xl hover:bg-slate-200 transition-all disabled:opacity-50 flex items-center gap-2">
+            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} Save General Settings
+          </button>
+        </form>
+      )}
+
+      {/* SMTP Tab */}
+      {activeTab === 'smtp' && (
+        <form onSubmit={handleSmtpSubmit} className="space-y-8">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <h2 className="text-xl font-semibold mb-6">Google SMTP Setup</h2>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Host</label>
+                  <input type="text" name="host" value={smtpData.host} onChange={handleSmtpChange} placeholder="smtp.gmail.com" required className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Port</label>
+                  <input type="number" name="port" value={smtpData.port} onChange={handleSmtpChange} required className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Username (Email)</label>
+                  <input type="text" name="username" value={smtpData.username} onChange={handleSmtpChange} placeholder="your-email@gmail.com" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Password / App Password</label>
+                  <input type="password" name="password" value={smtpData.password} onChange={handleSmtpChange} placeholder="••••••••" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Sender Name</label>
+                  <input type="text" name="fromName" value={smtpData.fromName} onChange={handleSmtpChange} placeholder="REVIVAL Team" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Sender Email (Optional)</label>
+                  <input type="email" name="fromEmail" value={smtpData.fromEmail} onChange={handleSmtpChange} placeholder="noreply@revival.com" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <button type="submit" disabled={saving} className="bg-white text-black font-medium px-8 py-3 rounded-xl hover:bg-slate-200 transition-all disabled:opacity-50 flex items-center gap-2">
+            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} Save SMTP Settings
+          </button>
+        </form>
+      )}
+
+      {/* Templates Tab */}
+      {activeTab === 'templates' && (
+        <div className="space-y-6">
+          <div className="flex bg-white/5 p-1 rounded-xl w-max">
+            {['INVOICE', 'E_TICKET', 'REMINDER'].map(t => (
+              <button
+                key={t}
+                onClick={() => setActiveTemplate(t as TemplateType)}
+                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTemplate === t ? 'bg-white text-black shadow-sm' : 'text-slate-400 hover:text-white'}`}
+              >
+                {t.replace('_', ' ')}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={handleTemplateSubmit} className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">{activeTemplate.replace('_', ' ')} Template</h2>
+              <div className="text-xs text-slate-400 bg-black/50 px-3 py-1 rounded-full">
+                Supported tags: {`{{name}}, {{orderNumber}}, {{totalAmount}}`}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Email Subject</label>
               <input
-                type="checkbox"
-                id="isEarlyBird"
-                name="isEarlyBird"
-                checked={formData.isEarlyBird}
-                onChange={handleChange}
-                className="w-5 h-5 rounded border-white/10 bg-black/50 text-white focus:ring-white/30 focus:ring-offset-black"
+                type="text"
+                name="subject"
+                value={templates[activeTemplate]?.subject || ''}
+                onChange={handleTemplateChange}
+                required
+                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30"
               />
-              <label htmlFor="isEarlyBird" className="text-sm font-medium text-white cursor-pointer">
-                Enable Early Bird Pricing
-              </label>
             </div>
-            <p className="text-xs text-slate-500 pl-8">If enabled, users will be charged the Early Bird rates below.</p>
 
-            {formData.isEarlyBird && (
-              <div className="pl-8 pt-2">
-                <label className="block text-sm font-medium text-slate-300 mb-2">Early Bird Expiration Date (Optional)</label>
-                <input
-                  type="date"
-                  name="earlyBirdEndDate"
-                  value={formData.earlyBirdEndDate}
-                  onChange={handleChange}
-                  className="w-full max-w-xs bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30"
-                />
-                <p className="text-xs text-slate-500 mt-2">After this date, pricing will automatically revert to Regular rates.</p>
-              </div>
-            )}
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">HTML Body</label>
+              <textarea
+                name="bodyHtml"
+                value={templates[activeTemplate]?.bodyHtml || ''}
+                onChange={handleTemplateChange}
+                required
+                rows={12}
+                className="w-full font-mono text-sm bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-slate-300 focus:outline-none focus:border-white/30"
+              />
+            </div>
+
+            <button type="submit" disabled={saving} className="bg-white text-black font-medium px-8 py-3 rounded-xl hover:bg-slate-200 transition-all disabled:opacity-50 flex items-center gap-2">
+              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} Save Template
+            </button>
+          </form>
         </div>
-
-        {/* Pricing Tiers */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-xl font-semibold mb-6">Pricing Tiers (RM)</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <h3 className="font-medium text-slate-400 border-b border-white/5 pb-2">Early Bird</h3>
-              
-              <div>
-                <label className="block text-sm text-slate-300 mb-1">Adult Price</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">RM</span>
-                  <input
-                    type="number"
-                    name="adultPriceEarlyBird"
-                    value={formData.adultPriceEarlyBird}
-                    onChange={handleChange}
-                    min="0"
-                    step="0.01"
-                    className="w-full bg-black/50 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:border-white/30"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm text-slate-300 mb-1">Kids Price</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">RM</span>
-                  <input
-                    type="number"
-                    name="kidsPriceEarlyBird"
-                    value={formData.kidsPriceEarlyBird}
-                    onChange={handleChange}
-                    min="0"
-                    step="0.01"
-                    className="w-full bg-black/50 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:border-white/30"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="font-medium text-slate-400 border-b border-white/5 pb-2">Regular</h3>
-              
-              <div>
-                <label className="block text-sm text-slate-300 mb-1">Adult Price</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">RM</span>
-                  <input
-                    type="number"
-                    name="adultPriceRegular"
-                    value={formData.adultPriceRegular}
-                    onChange={handleChange}
-                    min="0"
-                    step="0.01"
-                    className="w-full bg-black/50 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:border-white/30"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm text-slate-300 mb-1">Kids Price</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">RM</span>
-                  <input
-                    type="number"
-                    name="kidsPriceRegular"
-                    value={formData.kidsPriceRegular}
-                    onChange={handleChange}
-                    min="0"
-                    step="0.01"
-                    className="w-full bg-black/50 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:border-white/30"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={saving}
-          className="bg-white text-black font-medium px-8 py-3 rounded-xl hover:bg-slate-200 transition-all disabled:opacity-50 flex items-center gap-2"
-        >
-          {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-          Save Changes
-        </button>
-      </form>
+      )}
     </div>
   );
 }

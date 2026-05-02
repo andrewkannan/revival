@@ -99,9 +99,11 @@ export async function getPricing() {
     adultPrice: isEarlyBird 
       ? Number(adminConfig?.adultPriceEarlyBird || 50) 
       : Number(adminConfig?.adultPriceRegular || 70),
+    adultPriceOriginal: Number(adminConfig?.adultPriceRegular || 70),
     kidsPrice: isEarlyBird 
       ? Number(adminConfig?.kidsPriceEarlyBird || 25) 
       : Number(adminConfig?.kidsPriceRegular || 35),
+    kidsPriceOriginal: Number(adminConfig?.kidsPriceRegular || 35),
   };
 }
 
@@ -173,6 +175,23 @@ export async function finalizeRegistration(data: RegistrationData, sessionId: st
 
     // Release Redis lock
     await releaseTicketLock(sessionId);
+
+    // Send Invoice Email
+    try {
+      const { getEmailTemplate } = await import('./admin');
+      const { sendEmail, parseTemplate } = await import('@/lib/email');
+      
+      const template = await getEmailTemplate('INVOICE');
+      const parsedHtml = parseTemplate(template.bodyHtml, {
+        name: data.name,
+        orderNumber: result.orderNumber.toString(),
+        totalAmount: result.totalAmount.toString()
+      });
+      
+      await sendEmail(data.email, template.subject, parsedHtml);
+    } catch (emailError) {
+      console.error('Error sending invoice email:', emailError);
+    }
 
     return { success: true, registrationId: result.id };
   } catch (error) {

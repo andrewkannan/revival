@@ -20,11 +20,8 @@ const step1Schema = z.object({
 });
 
 const step2Schema = z.object({
-  adultTickets: z.number().min(0).max(10),
+  adultTickets: z.number().min(1, "You must select at least one ticket").max(10),
   kidsTickets: z.number().min(0).max(10),
-}).refine(data => data.adultTickets + data.kidsTickets > 0, {
-  message: "You must select at least one ticket",
-  path: ["adultTickets"]
 });
 
 type FormData = z.infer<typeof step1Schema> & z.infer<typeof step2Schema>;
@@ -36,7 +33,7 @@ export default function RegistrationWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [registrationId, setRegistrationId] = useState<string | null>(null);
-  const [pricing, setPricing] = useState({ adultPrice: 50, kidsPrice: 25, isEarlyBird: true });
+  const [pricing, setPricing] = useState({ adultPrice: 50, adultPriceOriginal: 70, kidsPrice: 25, kidsPriceOriginal: 35, isEarlyBird: true });
   
   const { register, handleSubmit, formState: { errors }, watch, trigger, getValues } = useForm<FormData>({
     resolver: zodResolver(step === 1 ? step1Schema : step2Schema) as any,
@@ -267,24 +264,17 @@ export default function RegistrationWizard() {
             <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
               <div>
                 <h4 className="font-medium text-lg">Adult Ticket</h4>
-                <p className="text-slate-400">RM {pricing.adultPrice.toFixed(2)}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-slate-400">RM {pricing.adultPrice.toFixed(2)}</p>
+                  {pricing.isEarlyBird && pricing.adultPriceOriginal && (
+                    <p className="text-slate-500 line-through text-sm">RM {pricing.adultPriceOriginal.toFixed(2)}</p>
+                  )}
+                </div>
               </div>
               <div className="flex items-center space-x-3">
                 <button type="button" onClick={() => { const val = getValues('adultTickets'); if(val > 0) register('adultTickets').onChange({target: {name: 'adultTickets', value: val - 1}}) }} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">-</button>
                 <span className="w-4 text-center font-medium">{formData.adultTickets}</span>
                 <button type="button" onClick={() => { const val = getValues('adultTickets'); if(val < 10) register('adultTickets').onChange({target: {name: 'adultTickets', value: val + 1}}) }} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">+</button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
-              <div>
-                <h4 className="font-medium text-lg">Kids Ticket</h4>
-                <p className="text-slate-400">RM {pricing.kidsPrice.toFixed(2)}</p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <button type="button" onClick={() => { const val = getValues('kidsTickets'); if(val > 0) register('kidsTickets').onChange({target: {name: 'kidsTickets', value: val - 1}}) }} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">-</button>
-                <span className="w-4 text-center font-medium">{formData.kidsTickets}</span>
-                <button type="button" onClick={() => { const val = getValues('kidsTickets'); if(val < 10) register('kidsTickets').onChange({target: {name: 'kidsTickets', value: val + 1}}) }} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">+</button>
               </div>
             </div>
 
@@ -324,12 +314,6 @@ export default function RegistrationWizard() {
                 <div className="flex justify-between">
                   <span>{formData.adultTickets}x Adult Ticket</span>
                   <span>RM {(formData.adultTickets * pricing.adultPrice).toFixed(2)}</span>
-                </div>
-              )}
-              {formData.kidsTickets > 0 && (
-                <div className="flex justify-between">
-                  <span>{formData.kidsTickets}x Kids Ticket</span>
-                  <span>RM {(formData.kidsTickets * pricing.kidsPrice).toFixed(2)}</span>
                 </div>
               )}
               <hr className="border-white/10" />
