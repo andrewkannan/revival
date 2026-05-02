@@ -1,6 +1,9 @@
 import nodemailer from 'nodemailer';
-import prisma from './prisma';
+import prisma from '@/lib/prisma';
 import dns from 'dns';
+import { promisify } from 'util';
+
+const lookup = promisify(dns.lookup);
 
 // Force Node.js to resolve IPv4 addresses first globally.
 // This prevents ENETUNREACH errors on Railway when trying to route Google SMTP via IPv6.
@@ -14,8 +17,17 @@ export async function getTransporter() {
   const user = settings?.username || process.env.SMTP_USER;
   const pass = settings?.password || process.env.SMTP_PASS;
 
+  let finalHost = host;
+  try {
+    // Force IPv4 resolution to prevent Railway ENETUNREACH on IPv6
+    const { address } = await lookup(host, { family: 4 });
+    finalHost = address;
+  } catch (e) {
+    console.error("DNS lookup failed, falling back to original host:", e);
+  }
+
   return nodemailer.createTransport({
-    host,
+    host: finalHost,
     port,
     secure: port === 465,
     connectionTimeout: 20000,
@@ -25,7 +37,10 @@ export async function getTransporter() {
       user,
       pass,
     },
-  });
+    tls: {
+      servername: host // Required so TLS verifies the domain, not the IP
+    }
+  } as any);
 }
 
 export async function sendEmail(to: string, subject: string, html: string, attachments?: any[]) {
