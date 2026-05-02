@@ -113,7 +113,7 @@ export default function Hero() {
           onClick={() => document.getElementById('registration')?.scrollIntoView({ behavior: 'smooth' })}
           className="bg-poster-accent hover:bg-poster-accent-bright text-poster-bg px-8 py-3 md:px-12 md:py-5 rounded-md font-black uppercase tracking-[0.15em] md:tracking-[0.2em] text-sm md:text-base hover:-translate-y-1 transition-all duration-300 shadow-[0_0_30px_rgba(140,174,176,0.4)] hover:shadow-[0_0_40px_rgba(164,197,198,0.6)] whitespace-nowrap"
         >
-          Get Your Tickets Now!
+          Secure your place today
         </button>
       </motion.div>
 
