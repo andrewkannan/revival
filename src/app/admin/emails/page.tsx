@@ -1,5 +1,6 @@
 import { getEmailLogs } from '@/actions/admin';
 import { Mail, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import RetryEmailButton from '@/components/admin/RetryEmailButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,8 +50,11 @@ export default async function EmailLogsPage() {
                           <CheckCircle2 className="w-4 h-4" /> <span className="font-medium text-xs">SENT</span>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1.5 text-red-400 bg-red-500/10 px-2.5 py-1 rounded-full w-fit">
-                          <XCircle className="w-4 h-4" /> <span className="font-medium text-xs">FAILED</span>
+                        <div className="flex items-center">
+                          <div className="flex items-center gap-1.5 text-red-400 bg-red-500/10 px-2.5 py-1 rounded-full w-fit">
+                            <XCircle className="w-4 h-4" /> <span className="font-medium text-xs">FAILED</span>
+                          </div>
+                          <RetryEmailButton logId={log.id} />
                         </div>
                       )}
                     </td>

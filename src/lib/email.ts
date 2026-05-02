@@ -21,7 +21,7 @@ export async function getTransporter() {
       user,
       pass,
     },
-  });
+  } as any);
 }
 
 export async function sendEmail(to: string, subject: string, html: string, attachments?: any[]) {

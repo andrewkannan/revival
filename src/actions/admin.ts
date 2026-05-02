@@ -420,3 +420,80 @@ export async function getEmailLogs() {
     return { success: false, logs: [] };
   }
 }
+
+export async function retryEmail(logId: string) {
+  try {
+    const log = await prisma.emailLog.findUnique({ where: { id: logId } });
+    if (!log) return { success: false, message: 'Log not found' };
+
+    const attendee = await prisma.attendee.findUnique({
+      where: { email: log.to },
+      include: {
+        registrations: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          include: { tickets: true }
+        }
+      }
+    });
+
+    if (!attendee || attendee.registrations.length === 0) {
+      return { success: false, message: 'Attendee or Registration not found' };
+    }
+
+    const registration = attendee.registrations[0];
+
+    if (log.subject.includes('Registration Invoice')) {
+      const template = await getEmailTemplate('INVOICE');
+      const parsedHtml = parseTemplate(template.bodyHtml, {
+        name: attendee.name,
+        orderNumber: registration.orderNumber.toString(),
+        totalAmount: registration.totalAmount.toString()
+      });
+      const success = await sendEmail(log.to, template.subject, parsedHtml);
+      if (success) {
+        await prisma.emailLog.update({ where: { id: logId }, data: { status: 'SENT', error: null } });
+      }
+      revalidatePath('/admin/emails');
+      return { success, message: success ? 'Retried successfully' : 'Retry failed again' };
+    } else if (log.subject.includes('E-Tickets')) {
+      const template = await getEmailTemplate('E_TICKET');
+      const parsedHtml = parseTemplate(template.bodyHtml, {
+        name: attendee.name,
+        orderNumber: registration.orderNumber.toString()
+      });
+
+      const attachments = registration.tickets.filter((t: any) => t.qrCodeUrl).map((t: any, idx: number) => ({
+        filename: `ticket-${t.ticketType.toLowerCase()}-${idx + 1}.png`,
+        content: t.qrCodeUrl!.split("base64,")[1],
+        encoding: 'base64',
+        cid: `ticket_${t.id}`
+      }));
+
+      let finalHtml = parsedHtml;
+      if (!finalHtml.includes('ticket_') && attachments.length > 0) {
+        const qrImages = attachments.map((att: any) => `<img src="cid:${att.cid}" alt="QR Code" style="margin: 10px; width: 150px; height: 150px;" />`).join('');
+        finalHtml += `<br/><br/><div><strong>Your Tickets:</strong><br/>${qrImages}</div>`;
+      }
+
+      const success = await sendEmail(log.to, template.subject, finalHtml, attachments);
+      if (success) {
+        await prisma.emailLog.update({ where: { id: logId }, data: { status: 'SENT', error: null } });
+      }
+      revalidatePath('/admin/emails');
+      return { success, message: success ? 'Retried successfully' : 'Retry failed again' };
+    } else if (log.subject.includes('Action Required')) {
+      const success = await sendPaymentRejectedEmail(log.to, attendee.name);
+      if (success) {
+        await prisma.emailLog.update({ where: { id: logId }, data: { status: 'SENT', error: null } });
+      }
+      revalidatePath('/admin/emails');
+      return { success, message: success ? 'Retried successfully' : 'Retry failed again' };
+    } else {
+      return { success: false, message: 'Unknown email type for retry' };
+    }
+  } catch (e: any) {
+    console.error("Retry failed:", e);
+    return { success: false, message: e.message || 'Server error' };
+  }
+}
