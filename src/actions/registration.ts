@@ -208,9 +208,10 @@ export async function uploadReceipt(registrationId: string, formData: FormData) 
     // Send Invoice/Receipt Email after they upload proof
     try {
       const template = await getEmailTemplate('INVOICE');
+      const formattedOrderNumber = 'R' + String(registration.orderNumber).padStart(5, '0');
       const parsedHtml = parseTemplate(template.bodyHtml, {
         name: registration.attendee.name,
-        orderNumber: registration.orderNumber.toString(),
+        orderNumber: formattedOrderNumber,
         totalAmount: registration.totalAmount.toString()
       });
       

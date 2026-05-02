@@ -123,13 +123,14 @@ export async function updateRegistrationStatus(id: string, status: RegistrationS
 
       // Send E-Ticket email
       const template = await getEmailTemplate('E_TICKET');
+      const formattedOrderNumber = 'R' + String(registration.orderNumber).padStart(5, '0');
       const parsedHtml = parseTemplate(template.bodyHtml, {
         name: registration.attendee.name,
-        orderNumber: registration.orderNumber.toString()
+        orderNumber: formattedOrderNumber
       });
 
       const attachments = [{
-        filename: `revival-ticket-${registration.orderNumber}.png`,
+        filename: `revival-ticket-${formattedOrderNumber}.png`,
         content: qrCodeUrl.split("base64,")[1],
         encoding: 'base64',
         cid: `ticket_master`
@@ -150,7 +151,7 @@ export async function updateRegistrationStatus(id: string, status: RegistrationS
               <img src="cid:ticket_master" alt="QR Code" style="width: 200px; height: 200px; margin: 0 auto; display: block;" />
             </div>
             <div style="background-color: #f8fafc; border-top: 2px dashed #cbd5e1; padding: 20px; text-align: center;">
-              <p style="margin: 0 0 5px; font-weight: bold; font-size: 18px; color: #0f172a;">Order #${registration.orderNumber}</p>
+              <p style="margin: 0 0 5px; font-weight: bold; font-size: 18px; color: #0f172a;">Order ${formattedOrderNumber}</p>
               <p style="margin: 0; color: #64748b; font-size: 14px;">Admit ${totalTickets} ${totalTickets === 1 ? 'Person' : 'People'}</p>
             </div>
           </div>
@@ -358,7 +359,7 @@ export async function getEmailTemplate(type: TemplateType) {
     <p style="color: #475569; line-height: 1.6;">Thank you for registering for the REVIVAL conference! Your registration has been received and is currently pending payment.</p>
     <div style="margin: 25px 0; padding: 15px; background-color: #f8fafc; border-radius: 8px; border-left: 4px solid #3b82f6;">
       <p style="margin: 0 0 5px; color: #64748b; font-size: 14px; text-transform: uppercase; font-weight: bold;">Order Number</p>
-      <p style="margin: 0; font-size: 24px; font-weight: bold; color: #0f172a; font-family: monospace;">#{{orderNumber}}</p>
+      <p style="margin: 0; font-size: 24px; font-weight: bold; color: #0f172a; font-family: monospace;">{{orderNumber}}</p>
     </div>
     <div style="margin: 25px 0; padding: 15px; background-color: #f8fafc; border-radius: 8px; border-left: 4px solid #10b981;">
       <p style="margin: 0 0 5px; color: #64748b; font-size: 14px; text-transform: uppercase; font-weight: bold;">Total Amount Due</p>
@@ -378,7 +379,7 @@ export async function getEmailTemplate(type: TemplateType) {
 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
   <h2>Your Tickets are Confirmed!</h2>
   <p>Hi {{name}},</p>
-  <p>Your payment has been verified. Attached are your unique QR code e-tickets for order <strong>#{{orderNumber}}</strong>.</p>
+  <p>Your payment has been verified. Attached are your unique QR code e-tickets for order <strong>{{orderNumber}}</strong>.</p>
   <p>Please present these QR codes at the entrance for scanning.</p>
   <br/>
   <p>See you there,<br/>The REVIVAL Team</p>
@@ -485,9 +486,10 @@ export async function retryEmail(logId: string) {
 
     if (log.subject.includes('Registration Invoice')) {
       const template = await getEmailTemplate('INVOICE');
+      const formattedOrderNumber = 'R' + String(registration.orderNumber).padStart(5, '0');
       const parsedHtml = parseTemplate(template.bodyHtml, {
         name: attendee.name,
-        orderNumber: registration.orderNumber.toString(),
+        orderNumber: formattedOrderNumber,
         totalAmount: registration.totalAmount.toString()
       });
       const success = await sendEmail(log.to, template.subject, parsedHtml);
@@ -498,13 +500,14 @@ export async function retryEmail(logId: string) {
       return { success, message: success ? 'Retried successfully' : 'Retry failed again' };
     } else if (log.subject.includes('E-Tickets')) {
       const template = await getEmailTemplate('E_TICKET');
+      const formattedOrderNumber = 'R' + String(registration.orderNumber).padStart(5, '0');
       const parsedHtml = parseTemplate(template.bodyHtml, {
         name: attendee.name,
-        orderNumber: registration.orderNumber.toString()
+        orderNumber: formattedOrderNumber
       });
 
       const attachments = registration.qrCodeUrl ? [{
-        filename: `revival-ticket-${registration.orderNumber}.png`,
+        filename: `revival-ticket-${formattedOrderNumber}.png`,
         content: registration.qrCodeUrl.split("base64,")[1],
         encoding: 'base64',
         cid: `ticket_master`
@@ -524,7 +527,7 @@ export async function retryEmail(logId: string) {
               <img src="cid:ticket_master" alt="QR Code" style="width: 200px; height: 200px; margin: 0 auto; display: block;" />
             </div>
             <div style="background-color: #f8fafc; border-top: 2px dashed #cbd5e1; padding: 20px; text-align: center;">
-              <p style="margin: 0 0 5px; font-weight: bold; font-size: 18px; color: #0f172a;">Order #${registration.orderNumber}</p>
+              <p style="margin: 0 0 5px; font-weight: bold; font-size: 18px; color: #0f172a;">Order ${formattedOrderNumber}</p>
               <p style="margin: 0; color: #64748b; font-size: 14px;">Admit ${totalTickets} ${totalTickets === 1 ? 'Person' : 'People'}</p>
             </div>
           </div>
@@ -551,5 +554,28 @@ export async function retryEmail(logId: string) {
   } catch (e: any) {
     console.error("Retry failed:", e);
     return { success: false, message: e.message || 'Server error' };
+  }
+}
+
+export async function wipeDatabase(password: string) {
+  if (password !== 'WIPE_REVIVAL_2026') {
+    return { success: false, message: 'Invalid password' };
+  }
+
+  try {
+    // Delete all transactional data
+    await prisma.ticket.deleteMany({});
+    await prisma.registration.deleteMany({});
+    await prisma.attendee.deleteMany({});
+    await prisma.emailLog.deleteMany({});
+
+    // Reset the sequence for orderNumber back to 1
+    // We use a raw query because Prisma does not have a native way to reset sequences.
+    await prisma.$executeRawUnsafe('ALTER SEQUENCE "Registration_orderNumber_seq" RESTART WITH 1');
+
+    return { success: true, message: 'Database wiped and order numbers reset successfully!' };
+  } catch (error) {
+    console.error("Failed to wipe database", error);
+    return { success: false, message: 'Failed to wipe database' };
   }
 }
