@@ -40,7 +40,7 @@ export default function AdminLayout({
         <div className="p-6 border-b border-white/10 flex items-center justify-between h-[73px]">
           {!isCollapsed && (
             <Link href="/admin" className="text-xl font-bold tracking-widest text-white whitespace-nowrap overflow-hidden">
-              REVIVAL<span className="text-slate-500 text-xs ml-2">ADMIN</span>
+              REVIVAL KIDS<span className="text-slate-500 text-xs ml-2">ADMIN</span>
             </Link>
           )}
           <button 

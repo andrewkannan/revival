@@ -6,26 +6,15 @@ import { OutreachLocation, RegistrationStatus } from '@prisma/client';
 import { getEmailTemplate } from './admin';
 import { sendEmail, parseTemplate } from '@/lib/email';
 
-export async function checkCapacity(requestedAdults: number, requestedKids: number) {
+export async function checkCapacity(requestedKids: number) {
   try {
-    const totalRequested = requestedAdults + requestedKids;
+    const totalRequested = requestedKids;
     
     // 1. Get Admin Config for capacities
     const adminConfig = await prisma.adminConfig.findUnique({ where: { id: 1 } });
-    const adultCapacity = adminConfig?.adultCapacity || 300; // default 300
     const kidsCapacity = adminConfig?.kidsCapacity || 100; // default 100
 
     // 2. Get tickets already stored in Postgres (SEAT_SECURED or PENDING)
-    const dbAdultTicketsCount = await prisma.ticket.count({
-      where: {
-        ticketType: 'ADULT',
-        registration: {
-          status: {
-            in: ['SEAT_SECURED', 'PENDING_FOR_PAYMENT', 'PENDING_FOR_REVIEW']
-          }
-        }
-      }
-    });
 
     const dbKidsTicketsCount = await prisma.ticket.count({
       where: {
@@ -41,12 +30,11 @@ export async function checkCapacity(requestedAdults: number, requestedKids: numb
     // 3. Get currently active Redis locks
     const locks = await getActiveLocksCount();
 
-    const availableAdults = adultCapacity - dbAdultTicketsCount - locks.activeAdults;
     const availableKids = kidsCapacity - dbKidsTicketsCount - locks.activeKids;
 
     return {
-      success: availableAdults >= requestedAdults && availableKids >= requestedKids,
-      available: availableAdults + availableKids,
+      success: availableKids >= requestedKids,
+      available: availableKids,
     };
   } catch (error) {
     console.error('Error checking capacity:', error);
@@ -54,15 +42,15 @@ export async function checkCapacity(requestedAdults: number, requestedKids: numb
   }
 }
 
-export async function lockTicketsAction(sessionId: string, adult: number, kids: number) {
+export async function lockTicketsAction(sessionId: string, kids: number) {
   try {
     // Check capacity one more time just before locking
-    const capCheck = await checkCapacity(adult, kids);
+    const capCheck = await checkCapacity(kids);
     if (!capCheck.success) {
       return { success: false, message: 'Not enough tickets available.' };
     }
     
-    const locked = await acquireTicketLock(sessionId, adult, kids);
+    const locked = await acquireTicketLock(sessionId, kids);
     if (locked) {
       return { success: true };
     } else {
@@ -98,10 +86,6 @@ export async function getPricing() {
   
   return {
     isEarlyBird,
-    adultPrice: isEarlyBird 
-      ? Number(adminConfig?.adultPriceEarlyBird || 50) 
-      : Number(adminConfig?.adultPriceRegular || 70),
-    adultPriceOriginal: Number(adminConfig?.adultPriceRegular || 70),
     kidsPrice: isEarlyBird 
       ? Number(adminConfig?.kidsPriceEarlyBird || 25) 
       : Number(adminConfig?.kidsPriceRegular || 35),
@@ -114,7 +98,6 @@ interface RegistrationData {
   email: string;
   phone: string;
   outreach: OutreachLocation;
-  adultTickets: number;
   kidsTickets: number;
 }
 
@@ -122,7 +105,7 @@ export async function finalizeRegistration(data: RegistrationData, sessionId: st
   try {
     // Start transaction
     const pricing = await getPricing();
-    const totalAmount = (data.adultTickets * pricing.adultPrice) + (data.kidsTickets * pricing.kidsPrice);
+    const totalAmount = (data.kidsTickets * pricing.kidsPrice);
 
     const result = await prisma.$transaction(async (tx) => {
       // 1. Find or create Attendee
@@ -151,7 +134,6 @@ export async function finalizeRegistration(data: RegistrationData, sessionId: st
       const registration = await tx.registration.create({
         data: {
           attendeeId: attendee.id,
-          adultTickets: data.adultTickets,
           kidsTickets: data.kidsTickets,
           totalAmount: totalAmount,
           status: 'PENDING_FOR_PAYMENT',
@@ -161,9 +143,6 @@ export async function finalizeRegistration(data: RegistrationData, sessionId: st
 
       // 3. Create Tickets
       const ticketsData = [];
-      for(let i=0; i<data.adultTickets; i++) {
-        ticketsData.push({ registrationId: registration.id, ticketType: 'ADULT' as const });
-      }
       for(let i=0; i<data.kidsTickets; i++) {
         ticketsData.push({ registrationId: registration.id, ticketType: 'KIDS' as const });
       }

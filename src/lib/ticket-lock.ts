@@ -3,7 +3,6 @@ import { redis } from './redis';
 const LOCK_TTL_SECONDS = 600; // 10 minutes
 
 export interface TicketLock {
-  adultTickets: number;
   kidsTickets: number;
 }
 
@@ -11,11 +10,10 @@ const inMemoryLocks = new Map<string, { data: TicketLock, expiresAt: number }>()
 
 export async function acquireTicketLock(
   sessionId: string, 
-  adultTickets: number, 
   kidsTickets: number
 ): Promise<boolean> {
   const lockKey = `ticket_lock:${sessionId}`;
-  const lockData: TicketLock = { adultTickets, kidsTickets };
+  const lockData: TicketLock = { kidsTickets };
   
   if (!process.env.REDIS_URL) {
     if (inMemoryLocks.has(lockKey) && inMemoryLocks.get(lockKey)!.expiresAt > Date.now()) {
@@ -64,22 +62,20 @@ export async function releaseTicketLock(sessionId: string): Promise<void> {
   } catch (e) {}
 }
 
-export async function getActiveLocksCount(): Promise<{ activeAdults: number, activeKids: number }> {
-  let totalAdult = 0;
+export async function getActiveLocksCount(): Promise<{ activeKids: number }> {
   let totalKids = 0;
 
   // Add memory locks
   const now = Date.now();
   for (const [key, lock] of Array.from(inMemoryLocks.entries())) {
     if (lock.expiresAt > now) {
-      totalAdult += lock.data.adultTickets;
       totalKids += lock.data.kidsTickets;
     } else {
       inMemoryLocks.delete(key);
     }
   }
 
-  if (!process.env.REDIS_URL) return { activeAdults: totalAdult, activeKids: totalKids };
+  if (!process.env.REDIS_URL) return { activeKids: totalKids };
 
   try {
     let cursor = '0';
@@ -93,7 +89,6 @@ export async function getActiveLocksCount(): Promise<{ activeAdults: number, act
           if (val) {
             try {
               const data = JSON.parse(val) as TicketLock;
-              totalAdult += data.adultTickets;
               totalKids += data.kidsTickets;
             } catch (e) {}
           }
@@ -104,5 +99,5 @@ export async function getActiveLocksCount(): Promise<{ activeAdults: number, act
     console.warn("Failed to get active locks from Redis, returning memory locks only.");
   }
   
-  return { activeAdults: totalAdult, activeKids: totalKids };
+  return { activeKids: totalKids };
 }

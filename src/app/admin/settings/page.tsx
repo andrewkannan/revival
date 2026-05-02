@@ -13,11 +13,11 @@ export default function SettingsPage() {
   const [activeTemplate, setActiveTemplate] = useState<TemplateType>('INVOICE');
   
   const [generalData, setGeneralData] = useState({
-    adultCapacity: 300,
+    kidsCapacity: 100,
     isEarlyBird: true,
     earlyBirdEndDate: '',
-    adultPriceEarlyBird: 50,
-    adultPriceRegular: 80,
+    kidsPriceEarlyBird: 25,
+    kidsPriceRegular: 40,
   });
 
   const [smtpData, setSmtpData] = useState({
@@ -40,11 +40,11 @@ export default function SettingsPage() {
       getEmailTemplate('REMINDER')
     ]).then(([config, smtp, invoice, eTicket, reminder]) => {
       setGeneralData({
-        adultCapacity: config.adultCapacity,
+        kidsCapacity: config.kidsCapacity,
         isEarlyBird: config.isEarlyBird,
         earlyBirdEndDate: config.earlyBirdEndDate ? new Date(config.earlyBirdEndDate).toISOString().split('T')[0] : '',
-        adultPriceEarlyBird: Number(config.adultPriceEarlyBird),
-        adultPriceRegular: Number(config.adultPriceRegular),
+        kidsPriceEarlyBird: Number(config.kidsPriceEarlyBird),
+        kidsPriceRegular: Number(config.kidsPriceRegular),
       });
 
       setSmtpData({
@@ -83,9 +83,6 @@ export default function SettingsPage() {
     const payload = {
       ...generalData,
       earlyBirdEndDate: generalData.earlyBirdEndDate ? new Date(generalData.earlyBirdEndDate) : null,
-      kidsCapacity: 100, // Dummy value since UI is removed
-      kidsPriceEarlyBird: 25, // Dummy value
-      kidsPriceRegular: 40, // Dummy value
     };
 
     const result = await updateAdminConfig(payload);
@@ -221,8 +218,8 @@ export default function SettingsPage() {
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Adult Capacity</label>
-                  <input type="number" name="adultCapacity" value={generalData.adultCapacity} onChange={handleGeneralChange} min="0" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30" />
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Kids Capacity</label>
+                  <input type="number" name="kidsCapacity" value={generalData.kidsCapacity} onChange={handleGeneralChange} min="0" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30" />
                 </div>
               </div>
               
@@ -246,15 +243,15 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <h3 className="font-medium text-slate-400 border-b border-white/5 pb-2">Early Bird</h3>
                 <div>
-                  <label className="block text-sm text-slate-300 mb-1">Adult Price</label>
-                  <input type="number" name="adultPriceEarlyBird" value={generalData.adultPriceEarlyBird} onChange={handleGeneralChange} min="0" step="0.01" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30" />
+                  <label className="block text-sm text-slate-300 mb-1">Kids Price</label>
+                  <input type="number" name="kidsPriceEarlyBird" value={generalData.kidsPriceEarlyBird} onChange={handleGeneralChange} min="0" step="0.01" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30" />
                 </div>
               </div>
               <div className="space-y-4">
                 <h3 className="font-medium text-slate-400 border-b border-white/5 pb-2">Regular</h3>
                 <div>
-                  <label className="block text-sm text-slate-300 mb-1">Adult Price</label>
-                  <input type="number" name="adultPriceRegular" value={generalData.adultPriceRegular} onChange={handleGeneralChange} min="0" step="0.01" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30" />
+                  <label className="block text-sm text-slate-300 mb-1">Kids Price</label>
+                  <input type="number" name="kidsPriceRegular" value={generalData.kidsPriceRegular} onChange={handleGeneralChange} min="0" step="0.01" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30" />
                 </div>
               </div>
             </div>

@@ -39,14 +39,14 @@ export default function RegistrationsTable({ initialData }: Props) {
   };
 
   const exportCSV = () => {
-    const headers = ['Queue No', 'Name', 'Email', 'Phone', 'Location', 'Adult Tickets', 'Total Amount', 'Status', 'Date'];
+    const headers = ['Queue No', 'Name', 'Email', 'Phone', 'Location', 'Kids Tickets', 'Total Amount', 'Status', 'Date'];
     const rows = filteredAndSorted.map(reg => [
       formatQueue(reg.orderNumber),
       `"${reg.attendee.name.replace(/"/g, '""')}"`,
       reg.attendee.email,
       reg.attendee.phone,
       reg.attendee.outreach,
-      reg.adultTickets,
+      reg.kidsTickets,
       reg.totalAmount,
       reg.status,
       new Date(reg.createdAt).toLocaleDateString()
@@ -254,7 +254,7 @@ export default function RegistrationsTable({ initialData }: Props) {
                       <div className="text-slate-400 text-xs mt-0.5 flex items-center gap-2">
                         {reg.attendee.phone}
                         <a 
-                          href={`https://wa.me/${formatPhoneForWhatsapp(reg.attendee.phone)}?text=Hi ${encodeURIComponent(reg.attendee.name)}, regarding your REVIVAL registration...`} 
+                          href={`https://wa.me/${formatPhoneForWhatsapp(reg.attendee.phone)}?text=Hi ${encodeURIComponent(reg.attendee.name)}, regarding your REVIVAL KIDS registration...`} 
                           target="_blank" 
                           rel="noreferrer"
                           className="text-emerald-400 hover:text-emerald-300 transition-colors"
@@ -269,7 +269,7 @@ export default function RegistrationsTable({ initialData }: Props) {
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="font-medium text-white mb-0.5">RM {reg.totalAmount}</div>
                       <div className="text-slate-400 text-xs">
-                        {reg.adultTickets} Tickets
+                        {reg.kidsTickets} Tickets
                       </div>
                       <div className="text-slate-400 text-xs mt-0.5">
                         {reg.attendee.outreach.replace('_', ' ')}
@@ -357,7 +357,7 @@ export default function RegistrationsTable({ initialData }: Props) {
                     <div className="text-slate-400 text-sm mt-1 flex items-center gap-2">
                       {reg.attendee.phone}
                       <a 
-                        href={`https://wa.me/${formatPhoneForWhatsapp(reg.attendee.phone)}?text=Hi ${encodeURIComponent(reg.attendee.name)}, regarding your REVIVAL registration...`} 
+                        href={`https://wa.me/${formatPhoneForWhatsapp(reg.attendee.phone)}?text=Hi ${encodeURIComponent(reg.attendee.name)}, regarding your REVIVAL KIDS registration...`} 
                         target="_blank" 
                         rel="noreferrer"
                         className="text-emerald-400 hover:text-emerald-300 transition-colors"
@@ -413,7 +413,7 @@ export default function RegistrationsTable({ initialData }: Props) {
                   <div>
                     <div className="font-medium text-white mb-0.5">RM {reg.totalAmount}</div>
                     <div className="text-slate-400 text-xs">
-                      {reg.adultTickets} Tickets
+                      {reg.kidsTickets} Tickets
                     </div>
                     <div className="text-slate-400 text-xs mt-0.5">
                       {reg.attendee.outreach.replace('_', ' ')}
@@ -500,7 +500,7 @@ export default function RegistrationsTable({ initialData }: Props) {
               <div className="overflow-auto p-6 bg-black/50 flex justify-center">
                 <div className="bg-white max-w-sm w-full rounded-2xl overflow-hidden shadow-2xl relative border-2 border-white/10">
                   <div className="bg-[#0f172a] p-6 text-center text-white">
-                    <h2 className="m-0 text-2xl tracking-widest font-bold">REVIVAL 2026</h2>
+                    <h2 className="m-0 text-2xl tracking-widest font-bold">REVIVAL KIDS 2026</h2>
                     <p className="m-0 mt-1 text-slate-400 text-sm">Official Conference Pass</p>
                   </div>
                   <div className="p-8 bg-white flex justify-center">
@@ -514,7 +514,7 @@ export default function RegistrationsTable({ initialData }: Props) {
                   </div>
                   <div className="bg-slate-50 border-t-2 border-dashed border-slate-300 p-6 text-center">
                     <p className="m-0 font-bold text-xl text-slate-900 mb-1">Order #{ticketsModal.reg.orderNumber}</p>
-                    <p className="m-0 text-slate-500 text-sm">Admit {ticketsModal.reg.adultTickets + ticketsModal.reg.kidsTickets} {(ticketsModal.reg.adultTickets + ticketsModal.reg.kidsTickets) === 1 ? 'Person' : 'People'}</p>
+                    <p className="m-0 text-slate-500 text-sm">Admit {ticketsModal.reg.kidsTickets} {ticketsModal.reg.kidsTickets === 1 ? 'Person' : 'People'}</p>
                   </div>
                 </div>
               </div>

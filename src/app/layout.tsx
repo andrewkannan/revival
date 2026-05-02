@@ -14,17 +14,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "REVIVAL Conference 2026",
+  title: "REVIVAL KIDS Conference 2026",
   description: "Secure your place at the most anticipated conference of the year.",
   openGraph: {
-    title: "REVIVAL Conference 2026",
+    title: "REVIVAL KIDS Conference 2026",
     description: "Secure your place at the most anticipated conference of the year.",
-    siteName: "REVIVAL",
+    siteName: "REVIVAL KIDS",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "REVIVAL Conference 2026",
+    title: "REVIVAL KIDS Conference 2026",
     description: "Secure your place at the most anticipated conference of the year.",
   }
 };

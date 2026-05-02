@@ -55,12 +55,9 @@ export async function getAdminConfig() {
     config = await prisma.adminConfig.create({
       data: {
         id: 1,
-        adultCapacity: 300,
         kidsCapacity: 100,
         isEarlyBird: true,
-        adultPriceEarlyBird: 50,
         kidsPriceEarlyBird: 25,
-        adultPriceRegular: 80,
         kidsPriceRegular: 40,
       }
     });
@@ -70,12 +67,9 @@ export async function getAdminConfig() {
 }
 
 export async function updateAdminConfig(data: {
-  adultCapacity: number;
   kidsCapacity: number;
   isEarlyBird: boolean;
-  adultPriceEarlyBird: number;
   kidsPriceEarlyBird: number;
-  adultPriceRegular: number;
   kidsPriceRegular: number;
   earlyBirdEndDate?: Date | null;
 }) {
@@ -136,7 +130,7 @@ export async function updateRegistrationStatus(id: string, status: RegistrationS
         cid: `ticket_master`
       }];
 
-      const totalTickets = registration.adultTickets + registration.kidsTickets;
+      const totalTickets = registration.kidsTickets;
 
       // Boarding Pass Style HTML
       let finalHtml = parsedHtml;
@@ -144,7 +138,7 @@ export async function updateRegistrationStatus(id: string, status: RegistrationS
         const passHtml = `
           <div style="max-width: 400px; margin: 20px auto; border: 2px solid #e5e7eb; border-radius: 16px; overflow: hidden; font-family: sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <div style="background-color: #0f172a; color: white; padding: 20px; text-align: center;">
-              <h2 style="margin: 0; font-size: 24px; letter-spacing: 2px;">REVIVAL 2026</h2>
+              <h2 style="margin: 0; font-size: 24px; letter-spacing: 2px;">REVIVAL KIDS 2026</h2>
               <p style="margin: 5px 0 0; color: #94a3b8; font-size: 14px;">Official Conference Pass</p>
             </div>
             <div style="padding: 30px 20px; background-color: white; text-align: center;">
@@ -278,15 +272,12 @@ export async function getDashboardStats() {
     where: { status: { in: ['PENDING_FOR_PAYMENT', 'PENDING_FOR_REVIEW'] } }
   });
 
-  const getCount = (stats: any[], type: 'ADULT' | 'KIDS') => 
+  const getCount = (stats: any[], type: 'KIDS') => 
     stats.find(s => s.ticketType === type)?._count || 0;
 
   return {
-    adultCapacity: config.adultCapacity,
     kidsCapacity: config.kidsCapacity,
-    securedAdults: getCount(securedStats, 'ADULT'),
     securedKids: getCount(securedStats, 'KIDS'),
-    pendingAdults: getCount(pendingStats, 'ADULT'),
     pendingKids: getCount(pendingStats, 'KIDS'),
     totalRegistrations,
     totalPaidAmount: Number(paidAmountAgg._sum.totalAmount || 0),
@@ -305,7 +296,7 @@ export async function getEmailSettings() {
         id: 1,
         host: "smtp.gmail.com",
         port: 465,
-        fromName: "REVIVAL Team",
+        fromName: "Revival Team",
       }
     });
   }
@@ -347,16 +338,16 @@ export async function getEmailTemplate(type: TemplateType) {
     let bodyHtml = '';
     
     if (type === 'INVOICE') {
-      subject = 'REVIVAL Conference - Registration Invoice';
+      subject = 'REVIVAL KIDS Conference - Registration Invoice';
       bodyHtml = `
 <div style="max-width: 500px; margin: 20px auto; border: 2px solid #e5e7eb; border-radius: 16px; overflow: hidden; font-family: sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
   <div style="background-color: #0f172a; color: white; padding: 20px; text-align: center;">
-    <h2 style="margin: 0; font-size: 24px; letter-spacing: 2px;">REVIVAL 2026</h2>
+    <h2 style="margin: 0; font-size: 24px; letter-spacing: 2px;">REVIVAL KIDS 2026</h2>
     <p style="margin: 5px 0 0; color: #94a3b8; font-size: 14px;">Registration Invoice</p>
   </div>
   <div style="padding: 30px 20px; background-color: white;">
     <p style="font-size: 18px; color: #0f172a; font-weight: bold;">Hi {{name}},</p>
-    <p style="color: #475569; line-height: 1.6;">Thank you for registering for the REVIVAL conference! Your registration has been received and is currently pending payment.</p>
+    <p style="color: #475569; line-height: 1.6;">Thank you for registering for the REVIVAL KIDS conference! Your registration has been received and is currently pending payment.</p>
     <div style="margin: 25px 0; padding: 15px; background-color: #f8fafc; border-radius: 8px; border-left: 4px solid #3b82f6;">
       <p style="margin: 0 0 5px; color: #64748b; font-size: 14px; text-transform: uppercase; font-weight: bold;">Order Number</p>
       <p style="margin: 0; font-size: 24px; font-weight: bold; color: #0f172a; font-family: monospace;">{{orderNumber}}</p>
@@ -370,11 +361,11 @@ export async function getEmailTemplate(type: TemplateType) {
     </p>
   </div>
   <div style="background-color: #f8fafc; border-top: 2px dashed #cbd5e1; padding: 20px; text-align: center;">
-    <p style="margin: 0; color: #64748b; font-size: 14px;">Blessings,<br/>The REVIVAL Team</p>
+    <p style="margin: 0; color: #64748b; font-size: 14px;">Blessings,<br/>The Revival Team</p>
   </div>
 </div>`;
     } else if (type === 'E_TICKET') {
-      subject = 'REVIVAL Conference - Your E-Tickets';
+      subject = 'REVIVAL KIDS Conference - Your E-Tickets';
       bodyHtml = `
 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
   <h2>Your Tickets are Confirmed!</h2>
@@ -382,18 +373,18 @@ export async function getEmailTemplate(type: TemplateType) {
   <p>Your payment has been verified. Attached are your unique QR code e-tickets for order <strong>{{orderNumber}}</strong>.</p>
   <p>Please present these QR codes at the entrance for scanning.</p>
   <br/>
-  <p>See you there,<br/>The REVIVAL Team</p>
+  <p>See you there,<br/>The Revival Team</p>
 </div>`;
     } else if (type === 'REMINDER') {
-      subject = 'REVIVAL Conference - Reminder';
+      subject = 'REVIVAL KIDS Conference - Reminder';
       bodyHtml = `
 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-  <h2>REVIVAL Conference is Approaching!</h2>
+  <h2>REVIVAL KIDS Conference is Approaching!</h2>
   <p>Hi {{name}},</p>
-  <p>This is a friendly reminder for the upcoming REVIVAL conference. We are so excited to see you!</p>
+  <p>This is a friendly reminder for the upcoming REVIVAL KIDS conference. We are so excited to see you!</p>
   <p>Don't forget to have your QR code e-tickets ready for scanning at the entrance.</p>
   <br/>
-  <p>Blessings,<br/>The REVIVAL Team</p>
+  <p>Blessings,<br/>The Revival Team</p>
 </div>`;
     }
 
@@ -513,14 +504,14 @@ export async function retryEmail(logId: string) {
         cid: `ticket_master`
       }] : [];
 
-      const totalTickets = registration.adultTickets + registration.kidsTickets;
+      const totalTickets = registration.kidsTickets;
 
       let finalHtml = parsedHtml;
       if (!finalHtml.includes('ticket_master') && attachments.length > 0) {
         const passHtml = `
           <div style="max-width: 400px; margin: 20px auto; border: 2px solid #e5e7eb; border-radius: 16px; overflow: hidden; font-family: sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <div style="background-color: #0f172a; color: white; padding: 20px; text-align: center;">
-              <h2 style="margin: 0; font-size: 24px; letter-spacing: 2px;">REVIVAL 2026</h2>
+              <h2 style="margin: 0; font-size: 24px; letter-spacing: 2px;">REVIVAL KIDS 2026</h2>
               <p style="margin: 5px 0 0; color: #94a3b8; font-size: 14px;">Official Conference Pass</p>
             </div>
             <div style="padding: 30px 20px; background-color: white; text-align: center;">
