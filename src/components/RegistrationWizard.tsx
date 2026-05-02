@@ -264,10 +264,15 @@ export default function RegistrationWizard() {
             <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
               <div>
                 <h4 className="font-medium text-lg">Adult Ticket</h4>
-                <div className="flex items-center gap-2">
-                  <p className="text-slate-400">RM {pricing.adultPrice.toFixed(2)}</p>
+                <div className="flex flex-col items-start gap-0.5 mt-1">
+                  <p className={pricing.isEarlyBird ? "text-emerald-400 text-xl font-bold" : "text-slate-400 text-lg"}>
+                    RM {pricing.adultPrice.toFixed(2)}
+                  </p>
                   {pricing.isEarlyBird && pricing.adultPriceOriginal && (
-                    <p className="text-slate-500 line-through text-sm">RM {pricing.adultPriceOriginal.toFixed(2)}</p>
+                    <div className="relative inline-block text-slate-500 font-medium text-sm">
+                      RM {pricing.adultPriceOriginal.toFixed(2)}
+                      <div className="absolute left-[-10%] top-1/2 w-[120%] h-[1.5px] bg-red-500/80 -translate-y-1/2 -rotate-12"></div>
+                    </div>
                   )}
                 </div>
               </div>
