@@ -23,7 +23,7 @@ export default async function EmailLogsPage() {
                 <th className="px-4 py-4 font-medium">Recipient</th>
                 <th className="px-4 py-4 font-medium">Subject</th>
                 <th className="px-4 py-4 font-medium">Sent At</th>
-                <th className="px-4 py-4 font-medium max-w-[300px]">Error Info</th>
+                <th className="px-4 py-4 font-medium">Error Info</th>
               </tr>
             </thead>
             <tbody>
@@ -63,7 +63,7 @@ export default async function EmailLogsPage() {
                     <td className="px-4 py-4 whitespace-nowrap text-slate-400 text-xs">
                       {new Date(log.createdAt).toLocaleString()}
                     </td>
-                    <td className="px-4 py-4 text-xs max-w-[300px] truncate text-slate-400">
+                    <td className="px-4 py-4 text-xs text-slate-400 break-words whitespace-pre-wrap">
                       {log.error ? (
                         <span className="text-red-400/80 cursor-help" title={log.error}>
                           <AlertCircle className="w-3.5 h-3.5 inline mr-1" />
