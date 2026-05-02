@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { RegistrationStatus, Registration, Attendee, OutreachLocation } from '@prisma/client';
-import { BadgeCheck, Clock, XCircle, AlertCircle, Search, X, Edit2, Download, FileArchive } from 'lucide-react';
+import { RegistrationStatus, Registration, Attendee, OutreachLocation, Ticket } from '@prisma/client';
+import { BadgeCheck, Clock, XCircle, AlertCircle, Search, X, Edit2, Download, FileArchive, QrCode } from 'lucide-react';
 import JSZip from 'jszip';
 import StatusSelect from '@/components/admin/StatusSelect';
 import EditRegistrationModal, { EditData } from '@/components/admin/EditRegistrationModal';
@@ -12,6 +12,7 @@ type RegistrationWithAttendee = Omit<Registration, 'totalAmount'> & {
   totalAmount: string;
   orderNumber: number;
   attendee: Attendee; 
+  tickets: Ticket[];
 };
 
 interface Props {
@@ -23,6 +24,7 @@ export default function RegistrationsTable({ initialData }: Props) {
   const [statusFilter, setStatusFilter] = useState<RegistrationStatus | 'ALL'>('ALL');
   const [outreachFilter, setOutreachFilter] = useState<OutreachLocation | 'ALL'>('ALL');
   const [receiptModal, setReceiptModal] = useState<{ url: string; queueNum: string } | null>(null);
+  const [ticketsModal, setTicketsModal] = useState<{ tickets: Ticket[], queueNum: string } | null>(null);
   const [editingData, setEditingData] = useState<EditData | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -277,6 +279,14 @@ export default function RegistrationsTable({ initialData }: Props) {
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex flex-col items-end gap-2">
+                        {reg.status === 'SEAT_SECURED' && reg.tickets && reg.tickets.length > 0 && (
+                          <button
+                            onClick={() => setTicketsModal({ tickets: reg.tickets, queueNum: formatQueue(reg.orderNumber) })}
+                            className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 rounded transition-colors border border-emerald-500/20"
+                          >
+                            <QrCode className="w-3.5 h-3.5" /> View Tickets
+                          </button>
+                        )}
                         <StatusSelect registrationId={reg.id} currentStatus={reg.status} />
                         <button 
                           onClick={() => setEditingData({
@@ -381,7 +391,15 @@ export default function RegistrationsTable({ initialData }: Props) {
                       {reg.attendee.outreach.replace('_', ' ')}
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
+                  <div className="flex flex-col items-end gap-2">
+                    {reg.status === 'SEAT_SECURED' && reg.tickets && reg.tickets.length > 0 && (
+                      <button
+                        onClick={() => setTicketsModal({ tickets: reg.tickets, queueNum: formatQueue(reg.orderNumber) })}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 rounded transition-colors border border-emerald-500/20"
+                      >
+                        <QrCode className="w-3.5 h-3.5" /> View Tickets
+                      </button>
+                    )}
                     <StatusSelect registrationId={reg.id} currentStatus={reg.status} />
                   </div>
                 </div>
@@ -425,6 +443,55 @@ export default function RegistrationsTable({ initialData }: Props) {
               </div>
               <div className="overflow-auto p-4 flex justify-center items-center bg-black/50 min-h-[50vh]">
                 <img src={receiptModal.url} alt="Payment Receipt" className="max-w-full h-auto rounded-xl shadow-2xl" />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {ticketsModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+            onClick={() => setTicketsModal(null)}
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="relative max-w-2xl w-full max-h-[90vh] flex flex-col bg-[#1c272a] border border-white/20 rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center p-4 border-b border-white/10 bg-white/5">
+                <h3 className="font-semibold text-white">E-Tickets ({ticketsModal.tickets.length}) - {ticketsModal.queueNum}</h3>
+                <button onClick={() => setTicketsModal(null)} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="overflow-auto p-6 bg-black/50">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {ticketsModal.tickets.map((ticket, index) => (
+                    <div key={ticket.id} className="bg-white p-4 rounded-xl flex flex-col items-center shadow-lg relative">
+                      <div className="absolute -top-3 bg-poster-accent text-poster-bg text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                        TICKET {index + 1}
+                      </div>
+                      <div className="w-full aspect-square mt-2 mb-3">
+                        {ticket.qrCodeUrl ? (
+                          <img src={ticket.qrCodeUrl} alt="QR Code" className="w-full h-full object-contain" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg text-gray-500 text-sm text-center p-4">
+                            QR code pending generation
+                          </div>
+                        )}
+                      </div>
+                      <div className="w-full pt-3 border-t border-gray-200">
+                        <p className="text-gray-400 text-[10px] font-mono text-center uppercase tracking-wider mb-1">Ticket ID</p>
+                        <p className="text-black text-[11px] font-mono text-center truncate w-full" title={ticket.id}>{ticket.id}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </motion.div>
           </motion.div>
