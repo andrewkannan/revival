@@ -83,6 +83,9 @@ export default function SettingsPage() {
     const payload = {
       ...generalData,
       earlyBirdEndDate: generalData.earlyBirdEndDate ? new Date(generalData.earlyBirdEndDate) : null,
+      kidsCapacity: 100, // Dummy value since UI is removed
+      kidsPriceEarlyBird: 25, // Dummy value
+      kidsPriceRegular: 40, // Dummy value
     };
 
     const result = await updateAdminConfig(payload);
