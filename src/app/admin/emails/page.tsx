@@ -65,10 +65,16 @@ export default async function EmailLogsPage() {
                     </td>
                     <td className="px-4 py-4 text-xs text-slate-400 break-words whitespace-pre-wrap">
                       {log.error ? (
-                        <span className="text-red-400/80 cursor-help" title={log.error}>
-                          <AlertCircle className="w-3.5 h-3.5 inline mr-1" />
-                          {log.error}
-                        </span>
+                        log.error.startsWith('[Success]') ? (
+                          <span className="text-emerald-400/80" title={log.error}>
+                            {log.error}
+                          </span>
+                        ) : (
+                          <span className="text-red-400/80 cursor-help" title={log.error}>
+                            <AlertCircle className="w-3.5 h-3.5 inline mr-1" />
+                            {log.error}
+                          </span>
+                        )
                       ) : (
                         <span className="opacity-50">-</span>
                       )}
