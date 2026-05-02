@@ -3,6 +3,8 @@
 import prisma from '@/lib/prisma';
 import { acquireTicketLock, releaseTicketLock, getActiveLocksCount } from '@/lib/ticket-lock';
 import { OutreachLocation, RegistrationStatus } from '@prisma/client';
+import { getEmailTemplate } from './admin';
+import { sendEmail, parseTemplate } from '@/lib/email';
 
 export async function checkCapacity(requestedAdults: number, requestedKids: number) {
   try {
@@ -178,9 +180,6 @@ export async function finalizeRegistration(data: RegistrationData, sessionId: st
 
     // Send Invoice Email
     try {
-      const { getEmailTemplate } = await import('./admin');
-      const { sendEmail, parseTemplate } = await import('@/lib/email');
-      
       const template = await getEmailTemplate('INVOICE');
       const parsedHtml = parseTemplate(template.bodyHtml, {
         name: data.name,

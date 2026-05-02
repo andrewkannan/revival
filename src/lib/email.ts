@@ -13,6 +13,9 @@ export async function getTransporter() {
     host,
     port,
     secure: port === 465,
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 5000,
     auth: {
       user,
       pass,
