@@ -13,9 +13,9 @@ export async function getTransporter() {
     host,
     port,
     secure: port === 465,
-    connectionTimeout: 5000,
-    greetingTimeout: 5000,
-    socketTimeout: 5000,
+    connectionTimeout: 20000,
+    greetingTimeout: 20000,
+    socketTimeout: 20000,
     family: 4, // Force IPv4 to prevent ENETUNREACH issues with Google SMTP IPv6
     auth: {
       user,
