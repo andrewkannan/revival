@@ -61,6 +61,7 @@ model Registration {
   receiptUrl    String?            // URL for uploaded bank receipt
   payLater      Boolean            @default(false)
   orderNumber   Int                @unique @default(autoincrement())
+  qrCodeUrl     String?            // Unified QR code for the entire registration
   tickets       Ticket[]
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt

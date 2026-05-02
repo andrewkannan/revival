@@ -24,7 +24,7 @@ export default function RegistrationsTable({ initialData }: Props) {
   const [statusFilter, setStatusFilter] = useState<RegistrationStatus | 'ALL'>('ALL');
   const [outreachFilter, setOutreachFilter] = useState<OutreachLocation | 'ALL'>('ALL');
   const [receiptModal, setReceiptModal] = useState<{ url: string; queueNum: string } | null>(null);
-  const [ticketsModal, setTicketsModal] = useState<{ tickets: Ticket[], queueNum: string } | null>(null);
+  const [ticketsModal, setTicketsModal] = useState<{ reg: RegistrationWithAttendee } | null>(null);
   const [editingData, setEditingData] = useState<EditData | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -279,12 +279,12 @@ export default function RegistrationsTable({ initialData }: Props) {
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex flex-col items-end gap-2">
-                        {reg.status === 'SEAT_SECURED' && reg.tickets && reg.tickets.length > 0 && (
+                        {reg.status === 'SEAT_SECURED' && (
                           <button
-                            onClick={() => setTicketsModal({ tickets: reg.tickets, queueNum: formatQueue(reg.orderNumber) })}
-                            className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 rounded transition-colors border border-emerald-500/20"
+                            onClick={() => setTicketsModal({ reg })}
+                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 rounded transition-colors border border-emerald-500/20 whitespace-nowrap mt-2 sm:mt-0"
                           >
-                            <QrCode className="w-3.5 h-3.5" /> View Tickets
+                            <QrCode className="w-3.5 h-3.5" /> View Ticket
                           </button>
                         )}
                         <StatusSelect registrationId={reg.id} currentStatus={reg.status} />
@@ -392,12 +392,12 @@ export default function RegistrationsTable({ initialData }: Props) {
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    {reg.status === 'SEAT_SECURED' && reg.tickets && reg.tickets.length > 0 && (
+                    {reg.status === 'SEAT_SECURED' && (
                       <button
-                        onClick={() => setTicketsModal({ tickets: reg.tickets, queueNum: formatQueue(reg.orderNumber) })}
+                        onClick={() => setTicketsModal({ reg })}
                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 rounded transition-colors border border-emerald-500/20"
                       >
-                        <QrCode className="w-3.5 h-3.5" /> View Tickets
+                        <QrCode className="w-3.5 h-3.5" /> View Ticket
                       </button>
                     )}
                     <StatusSelect registrationId={reg.id} currentStatus={reg.status} />
@@ -464,33 +464,30 @@ export default function RegistrationsTable({ initialData }: Props) {
               onClick={e => e.stopPropagation()}
             >
               <div className="flex justify-between items-center p-4 border-b border-white/10 bg-white/5">
-                <h3 className="font-semibold text-white">E-Tickets ({ticketsModal.tickets.length}) - {ticketsModal.queueNum}</h3>
+                <h3 className="font-semibold text-white">E-Ticket - {formatQueue(ticketsModal.reg.orderNumber)}</h3>
                 <button onClick={() => setTicketsModal(null)} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white">
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="overflow-auto p-6 bg-black/50">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {ticketsModal.tickets.map((ticket, index) => (
-                    <div key={ticket.id} className="bg-white p-4 rounded-xl flex flex-col items-center shadow-lg relative">
-                      <div className="absolute -top-3 bg-poster-accent text-poster-bg text-xs font-bold px-3 py-1 rounded-full shadow-md">
-                        TICKET {index + 1}
+              <div className="overflow-auto p-6 bg-black/50 flex justify-center">
+                <div className="bg-white max-w-sm w-full rounded-2xl overflow-hidden shadow-2xl relative border-2 border-white/10">
+                  <div className="bg-[#0f172a] p-6 text-center text-white">
+                    <h2 className="m-0 text-2xl tracking-widest font-bold">REVIVAL 2026</h2>
+                    <p className="m-0 mt-1 text-slate-400 text-sm">Official Conference Pass</p>
+                  </div>
+                  <div className="p-8 bg-white flex justify-center">
+                    {(ticketsModal.reg as any).qrCodeUrl ? (
+                      <img src={(ticketsModal.reg as any).qrCodeUrl} alt="QR Code" className="w-48 h-48 object-contain" />
+                    ) : (
+                      <div className="w-48 h-48 flex items-center justify-center border-2 border-dashed border-slate-300 rounded-lg text-slate-400 text-sm text-center p-4">
+                        QR code missing or not yet generated
                       </div>
-                      <div className="w-full aspect-square mt-2 mb-3">
-                        {ticket.qrCodeUrl ? (
-                          <img src={ticket.qrCodeUrl} alt="QR Code" className="w-full h-full object-contain" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg text-gray-500 text-sm text-center p-4">
-                            QR code pending generation
-                          </div>
-                        )}
-                      </div>
-                      <div className="w-full pt-3 border-t border-gray-200">
-                        <p className="text-gray-400 text-[10px] font-mono text-center uppercase tracking-wider mb-1">Ticket ID</p>
-                        <p className="text-black text-[11px] font-mono text-center truncate w-full" title={ticket.id}>{ticket.id}</p>
-                      </div>
-                    </div>
-                  ))}
+                    )}
+                  </div>
+                  <div className="bg-slate-50 border-t-2 border-dashed border-slate-300 p-6 text-center">
+                    <p className="m-0 font-bold text-xl text-slate-900 mb-1">Order #{ticketsModal.reg.orderNumber}</p>
+                    <p className="m-0 text-slate-500 text-sm">Admit {ticketsModal.reg.adultTickets + ticketsModal.reg.kidsTickets} {(ticketsModal.reg.adultTickets + ticketsModal.reg.kidsTickets) === 1 ? 'Person' : 'People'}</p>
+                  </div>
                 </div>
               </div>
             </motion.div>

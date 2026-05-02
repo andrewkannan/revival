@@ -111,19 +111,14 @@ export async function updateRegistrationStatus(id: string, status: RegistrationS
       // Fire and forget email
       sendPaymentRejectedEmail(registration.attendee.email, registration.attendee.name).catch(e => console.error("Async email error:", e));
     } else if (status === 'SEAT_SECURED') {
-      // Generate QR codes for tickets
-      const updatedTickets = [];
-      for (const ticket of registration.tickets) {
-        if (!ticket.qrCodeUrl) {
-          const qrCodeUrl = await QRCode.toDataURL(ticket.id);
-          const updatedTicket = await prisma.ticket.update({
-            where: { id: ticket.id },
-            data: { qrCodeUrl }
-          });
-          updatedTickets.push(updatedTicket);
-        } else {
-          updatedTickets.push(ticket);
-        }
+      // Generate Master QR code for the registration
+      let qrCodeUrl = registration.qrCodeUrl;
+      if (!qrCodeUrl) {
+        qrCodeUrl = await QRCode.toDataURL(registration.id);
+        await prisma.registration.update({
+          where: { id: registration.id },
+          data: { qrCodeUrl }
+        });
       }
 
       // Send E-Ticket email
@@ -133,18 +128,34 @@ export async function updateRegistrationStatus(id: string, status: RegistrationS
         orderNumber: registration.orderNumber.toString()
       });
 
-      const attachments = updatedTickets.map((t, idx) => ({
-        filename: `ticket-${t.ticketType.toLowerCase()}-${idx + 1}.png`,
-        content: t.qrCodeUrl!.split("base64,")[1],
+      const attachments = [{
+        filename: `revival-ticket-${registration.orderNumber}.png`,
+        content: qrCodeUrl.split("base64,")[1],
         encoding: 'base64',
-        cid: `ticket_${t.id}` // Can be referenced in HTML as cid:ticket_id
-      }));
+        cid: `ticket_master`
+      }];
 
-      // Optionally inject images into the HTML if they are missing
+      const totalTickets = registration.adultTickets + registration.kidsTickets;
+
+      // Boarding Pass Style HTML
       let finalHtml = parsedHtml;
-      if (!finalHtml.includes('ticket_')) {
-        const qrImages = attachments.map(att => `<img src="cid:${att.cid}" alt="QR Code" style="margin: 10px; width: 150px; height: 150px;" />`).join('');
-        finalHtml += `<br/><br/><div><strong>Your Tickets:</strong><br/>${qrImages}</div>`;
+      if (!finalHtml.includes('ticket_master')) {
+        const passHtml = `
+          <div style="max-width: 400px; margin: 20px auto; border: 2px solid #e5e7eb; border-radius: 16px; overflow: hidden; font-family: sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="background-color: #0f172a; color: white; padding: 20px; text-align: center;">
+              <h2 style="margin: 0; font-size: 24px; letter-spacing: 2px;">REVIVAL 2026</h2>
+              <p style="margin: 5px 0 0; color: #94a3b8; font-size: 14px;">Official Conference Pass</p>
+            </div>
+            <div style="padding: 30px 20px; background-color: white; text-align: center;">
+              <img src="cid:ticket_master" alt="QR Code" style="width: 200px; height: 200px; margin: 0 auto; display: block;" />
+            </div>
+            <div style="background-color: #f8fafc; border-top: 2px dashed #cbd5e1; padding: 20px; text-align: center;">
+              <p style="margin: 0 0 5px; font-weight: bold; font-size: 18px; color: #0f172a;">Order #${registration.orderNumber}</p>
+              <p style="margin: 0; color: #64748b; font-size: 14px;">Admit ${totalTickets} ${totalTickets === 1 ? 'Person' : 'People'}</p>
+            </div>
+          </div>
+        `;
+        finalHtml += `<br/>${passHtml}`;
       }
 
       // Fire and forget: send email asynchronously
@@ -463,17 +474,33 @@ export async function retryEmail(logId: string) {
         orderNumber: registration.orderNumber.toString()
       });
 
-      const attachments = registration.tickets.filter((t: any) => t.qrCodeUrl).map((t: any, idx: number) => ({
-        filename: `ticket-${t.ticketType.toLowerCase()}-${idx + 1}.png`,
-        content: t.qrCodeUrl!.split("base64,")[1],
+      const attachments = registration.qrCodeUrl ? [{
+        filename: `revival-ticket-${registration.orderNumber}.png`,
+        content: registration.qrCodeUrl.split("base64,")[1],
         encoding: 'base64',
-        cid: `ticket_${t.id}`
-      }));
+        cid: `ticket_master`
+      }] : [];
+
+      const totalTickets = registration.adultTickets + registration.kidsTickets;
 
       let finalHtml = parsedHtml;
-      if (!finalHtml.includes('ticket_') && attachments.length > 0) {
-        const qrImages = attachments.map((att: any) => `<img src="cid:${att.cid}" alt="QR Code" style="margin: 10px; width: 150px; height: 150px;" />`).join('');
-        finalHtml += `<br/><br/><div><strong>Your Tickets:</strong><br/>${qrImages}</div>`;
+      if (!finalHtml.includes('ticket_master') && attachments.length > 0) {
+        const passHtml = `
+          <div style="max-width: 400px; margin: 20px auto; border: 2px solid #e5e7eb; border-radius: 16px; overflow: hidden; font-family: sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="background-color: #0f172a; color: white; padding: 20px; text-align: center;">
+              <h2 style="margin: 0; font-size: 24px; letter-spacing: 2px;">REVIVAL 2026</h2>
+              <p style="margin: 5px 0 0; color: #94a3b8; font-size: 14px;">Official Conference Pass</p>
+            </div>
+            <div style="padding: 30px 20px; background-color: white; text-align: center;">
+              <img src="cid:ticket_master" alt="QR Code" style="width: 200px; height: 200px; margin: 0 auto; display: block;" />
+            </div>
+            <div style="background-color: #f8fafc; border-top: 2px dashed #cbd5e1; padding: 20px; text-align: center;">
+              <p style="margin: 0 0 5px; font-weight: bold; font-size: 18px; color: #0f172a;">Order #${registration.orderNumber}</p>
+              <p style="margin: 0; color: #64748b; font-size: 14px;">Admit ${totalTickets} ${totalTickets === 1 ? 'Person' : 'People'}</p>
+            </div>
+          </div>
+        `;
+        finalHtml += `<br/>${passHtml}`;
       }
 
       const success = await sendEmail(log.to, template.subject, finalHtml, attachments);
