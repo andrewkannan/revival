@@ -17,6 +17,21 @@ export default function Hero() {
   return (
     <div className="relative w-full min-h-screen bg-[#11181a] flex flex-col items-center pt-24 pb-16 px-4 gap-12 md:gap-16 overflow-x-hidden">
       
+      {/* Sky Light Rays / God Rays Background */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden mix-blend-screen opacity-70">
+        {/* Core glow */}
+        <div className="absolute -top-[10%] left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-poster-accent/20 blur-[120px] rounded-full"></div>
+        {/* Radiating rays */}
+        <div 
+          className="absolute -top-[10%] left-1/2 -translate-x-1/2 w-[200vw] h-[150vh]"
+          style={{
+            background: 'repeating-conic-gradient(from 120deg at 50% 5%, transparent 0deg, rgba(140,174,176,0.15) 4deg, transparent 8deg, rgba(140,174,176,0.05) 12deg, transparent 18deg)',
+            WebkitMaskImage: 'radial-gradient(ellipse at 50% 0%, black 10%, transparent 60%)',
+            maskImage: 'radial-gradient(ellipse at 50% 0%, black 10%, transparent 60%)'
+          }}
+        />
+      </div>
+
       {/* PANEL 1 - TOP */}
       <motion.div 
          initial={{ opacity: 0, y: 20 }} 

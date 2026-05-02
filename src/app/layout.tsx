@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import CrossBackground from "@/components/CrossBackground";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,7 +39,8 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col relative bg-poster-bg text-slate-200">
+        <CrossBackground />
         {/* Cinematic Film Grain Overlay */}
         <div 
           className="pointer-events-none fixed inset-0 z-[999] h-full w-full opacity-[0.15] mix-blend-overlay" 
