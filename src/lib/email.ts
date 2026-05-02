@@ -9,38 +9,41 @@ const lookup = promisify(dns.lookup);
 // This prevents ENETUNREACH errors on Railway when trying to route Google SMTP via IPv6.
 dns.setDefaultResultOrder('ipv4first');
 
-export async function getTransporter() {
+export async function getTransporter(overridePort?: number) {
   const settings = await prisma.emailSettings.findFirst();
   
-  const host = settings?.host || process.env.SMTP_HOST || 'smtpout.secureserver.net';
-  const port = settings?.port || parseInt(process.env.SMTP_PORT || '465');
+  const host = settings?.host || process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = overridePort || settings?.port || parseInt(process.env.SMTP_PORT || '465');
   const user = settings?.username || process.env.SMTP_USER;
   const pass = settings?.password || process.env.SMTP_PASS;
 
   let finalHost = host;
+  let dnsLog = "Skipped DNS lookup";
   try {
-    // Force IPv4 resolution to prevent Railway ENETUNREACH on IPv6
     const { address } = await lookup(host, { family: 4 });
     finalHost = address;
-  } catch (e) {
-    console.error("DNS lookup failed, falling back to original host:", e);
+    dnsLog = `Resolved ${host} to IPv4: ${address}`;
+  } catch (e: any) {
+    dnsLog = `DNS lookup failed for ${host}: ${e.message}`;
+    console.error(dnsLog);
   }
 
-  return nodemailer.createTransport({
-    host: finalHost,
-    port,
-    secure: port === 465,
-    connectionTimeout: 20000,
-    greetingTimeout: 20000,
-    socketTimeout: 20000,
-    auth: {
-      user,
-      pass,
-    },
-    tls: {
-      servername: host // Required so TLS verifies the domain, not the IP
-    }
-  } as any);
+  // If we are using 587, secure is false (uses STARTTLS instead of implicit TLS)
+  const isSecure = port === 465;
+
+  return {
+    transporter: nodemailer.createTransport({
+      host: finalHost,
+      port,
+      secure: isSecure,
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 15000,
+      auth: { user, pass },
+      tls: { servername: host } // Required so TLS verifies the domain, not the IP
+    } as any),
+    debugInfo: `Port: ${port}, Secure: ${isSecure}, ${dnsLog}`
+  };
 }
 
 export async function sendEmail(to: string, subject: string, html: string, attachments?: any[]) {
@@ -54,7 +57,7 @@ export async function sendEmail(to: string, subject: string, html: string, attac
     return false;
   }
 
-  const transporter = await getTransporter();
+  const { transporter, debugInfo } = await getTransporter();
 
   try {
     await transporter.sendMail({
@@ -71,30 +74,62 @@ export async function sendEmail(to: string, subject: string, html: string, attac
         data: {
           to,
           subject,
-          status: 'SENT'
+          status: 'SENT',
+          error: `[Success] ${debugInfo}`
         }
       });
-    } catch (dbError) {
-      console.error("Failed to log email success to DB:", dbError);
-    }
+    } catch (dbError) {}
     
     return true;
   } catch (error: any) {
-    console.error("Failed to send email:", error);
+    console.error("Failed to send email on first try:", error);
     
-    // Log failure
+    // Fallback: If it was a network error (timeout/unreachable) on port 465, try port 587
+    if (error?.message?.includes('timeout') || error?.message?.includes('ENETUNREACH')) {
+      try {
+        const { transporter: fallbackTransporter, debugInfo: fbDebugInfo } = await getTransporter(587);
+        await fallbackTransporter.sendMail({
+          from: `"${fromName}" <${fromEmail}>`,
+          to,
+          subject,
+          html,
+          attachments,
+        });
+
+        await prisma.emailLog.create({
+          data: {
+            to,
+            subject,
+            status: 'SENT',
+            error: `[Success via Fallback 587] ${fbDebugInfo}`
+          }
+        });
+        return true;
+      } catch (fbError: any) {
+        // Both failed
+        await prisma.emailLog.create({
+          data: {
+            to,
+            subject,
+            status: 'FAILED',
+            error: `[Primary: ${error.message}] [Fallback 587: ${fbError.message}] [Debug: ${debugInfo}]`
+          }
+        });
+        return false;
+      }
+    }
+
+    // Standard failure logging
     try {
       await prisma.emailLog.create({
         data: {
           to,
           subject,
           status: 'FAILED',
-          error: error?.message || 'Unknown error'
+          error: `[Error: ${error?.message || 'Unknown error'}] [Debug: ${debugInfo}]`
         }
       });
-    } catch (dbError) {
-      console.error("Failed to log email failure to DB:", dbError);
-    }
+    } catch (dbError) {}
     
     return false;
   }
