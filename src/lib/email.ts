@@ -158,3 +158,49 @@ export function parseTemplate(template: string, data: Record<string, string>) {
   }
   return parsed;
 }
+
+declare global {
+  var isProcessingEmailQueue: boolean | undefined;
+}
+
+export async function processEmailQueue() {
+  if (global.isProcessingEmailQueue) return;
+  global.isProcessingEmailQueue = true;
+
+  try {
+    while (true) {
+      const nextItem = await prisma.emailQueue.findFirst({
+        where: { status: 'PENDING' },
+        orderBy: { createdAt: 'asc' }
+      });
+
+      if (!nextItem) break; // Queue empty
+
+      try {
+        const success = await sendEmail(nextItem.to, nextItem.subject, nextItem.bodyHtml);
+        await prisma.emailQueue.update({
+          where: { id: nextItem.id },
+          data: {
+            status: success ? 'SENT' : 'FAILED',
+            error: success ? null : 'Failed to send'
+          }
+        });
+      } catch (err: any) {
+        await prisma.emailQueue.update({
+          where: { id: nextItem.id },
+          data: {
+            status: 'FAILED',
+            error: err.message || 'Error occurred'
+          }
+        });
+      }
+
+      // Zoho Mail rate limiting: Wait 5 seconds between emails
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+  } catch (error) {
+    console.error("Queue processor error:", error);
+  } finally {
+    global.isProcessingEmailQueue = false;
+  }
+}

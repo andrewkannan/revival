@@ -4,7 +4,49 @@ import { cookies } from 'next/headers';
 import prisma from '@/lib/prisma';
 import { RegistrationStatus, OutreachLocation, TemplateType } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
-import { sendPaymentRejectedEmail, sendEmail, parseTemplate } from '@/lib/email';
+import { sendPaymentRejectedEmail, sendEmail, parseTemplate, processEmailQueue } from '@/lib/email';
+
+export async function enqueueBulkEmails(statuses: string[]) {
+  try {
+    const whereClause = statuses.includes('ALL') ? {} : { status: { in: statuses as RegistrationStatus[] } };
+    
+    const registrations = await prisma.registration.findMany({
+      where: whereClause,
+      include: { attendee: true }
+    });
+
+    if (registrations.length === 0) {
+      return { success: false, message: "No registrations found for the selected statuses." };
+    }
+
+    const template = await getEmailTemplate('REMINDER');
+    const queueItems = registrations.map(reg => {
+      const parsedHtml = parseTemplate(template.bodyHtml, {
+        name: reg.attendee.name,
+        orderNumber: reg.orderNumber.toString()
+      });
+      
+      return {
+        to: reg.attendee.email,
+        subject: template.subject,
+        bodyHtml: parsedHtml,
+        status: 'PENDING'
+      };
+    });
+
+    await prisma.emailQueue.createMany({
+      data: queueItems
+    });
+
+    // Fire and forget queue processing
+    processEmailQueue().catch(e => console.error("Queue process error:", e));
+
+    return { success: true, message: `Queued ${queueItems.length} emails for bulk sending.` };
+  } catch (e) {
+    console.error("Failed to enqueue emails", e);
+    return { success: false, message: "Failed to enqueue bulk emails." };
+  }
+}
 import QRCode from 'qrcode';
 
 const ADMIN_COOKIE_NAME = 'revival_admin_session';
@@ -414,31 +456,6 @@ export async function updateEmailTemplate(type: TemplateType, subject: string, b
   }
 }
 
-export async function sendConferenceReminders() {
-  try {
-    const registrations = await prisma.registration.findMany({
-      where: { status: 'SEAT_SECURED' },
-      include: { attendee: true }
-    });
-
-    const template = await getEmailTemplate('REMINDER');
-
-    let sentCount = 0;
-    for (const reg of registrations) {
-      const parsedHtml = parseTemplate(template.bodyHtml, {
-        name: reg.attendee.name,
-        orderNumber: reg.orderNumber.toString()
-      });
-      const sent = await sendEmail(reg.attendee.email, template.subject, parsedHtml);
-      if (sent) sentCount++;
-    }
-
-    return { success: true, message: `Sent ${sentCount} reminders.` };
-  } catch (e) {
-    console.error("Failed to send reminders", e);
-    return { success: false, message: "Failed to send reminders." };
-  }
-}
 
 export async function getEmailLogs() {
   try {
