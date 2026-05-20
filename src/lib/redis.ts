@@ -8,6 +8,8 @@ const createRedisClient = () => {
   if (redisUrl) {
     const client = new Redis(redisUrl, {
       maxRetriesPerRequest: null,
+      enableOfflineQueue: false, // Prevents commands from hanging forever if Redis is down
+      commandTimeout: 3000,
       retryStrategy(times) {
         return Math.min(times * 100, 3000); // Reconnect with a delay
       }
