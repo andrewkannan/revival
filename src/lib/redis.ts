@@ -4,12 +4,35 @@ const globalForRedis = global as unknown as { redis: Redis | undefined };
 
 const redisUrl = process.env.REDIS_URL;
 
-export const redis =
-  globalForRedis.redis ||
-  (redisUrl
-    ? new Redis(redisUrl)
-    : process.env.NODE_ENV === 'production'
-    ? (null as unknown as Redis) // Do not fallback to localhost in production to avoid hanging Server Components
-    : new Redis({ host: 'localhost', port: 6379 }));
+const createRedisClient = () => {
+  if (redisUrl) {
+    const client = new Redis(redisUrl, {
+      maxRetriesPerRequest: null,
+      retryStrategy(times) {
+        return Math.min(times * 100, 3000); // Reconnect with a delay
+      }
+    });
+    
+    // Prevent unhandled error events from crashing the entire Node.js server
+    client.on('error', (err) => {
+      console.warn('Redis connection error (non-fatal):', err.message);
+    });
+    
+    return client;
+  }
+  
+  if (process.env.NODE_ENV === 'production') {
+    return null as unknown as Redis;
+  }
+  
+  const localClient = new Redis({ host: 'localhost', port: 6379 });
+  localClient.on('error', (err) => {
+    console.warn('Local Redis connection error:', err.message);
+  });
+  
+  return localClient;
+};
+
+export const redis = globalForRedis.redis || createRedisClient();
 
 if (process.env.NODE_ENV !== 'production' && redis) globalForRedis.redis = redis;
